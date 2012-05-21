@@ -15,9 +15,9 @@ NOTE: This module is designed primarily to allow for css optimization as part of
 Primary Usage
 -------------
 
-define(['css!main-stylesheet'], function() {
+``define(['css!main-stylesheet'], function() {
   //code here
-});
+});``
 
 Installation and Setup
 ----------------------
@@ -28,10 +28,10 @@ Set the path to require-css in your paths config. Optionally also include a para
 
 Also ensure you have the text plugin dependency in the scripts folder (the same folder the require-css folder is in).
 
-paths = {
+``paths = {
   css: 'require-css/css',
   c: '../css'
-}
+}``
 
 (or wherever you have placed require-css and your css)
 
@@ -39,8 +39,8 @@ Include css with the plugin syntax (leaving out the extension).
 
 Example:
 
-define(['css!c/my-stylesheet'], function() {
+``define(['css!c/my-stylesheet'], function() {
   //code here
-});
+});``
 
 The "c/" part allows an easy reference to a css folder.
