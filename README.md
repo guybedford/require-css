@@ -98,6 +98,8 @@ Then the optimizer output would be:
 Had there been further CSS inclusions with the suffix '[]' as part of the dependency tree, these would have also been included in mymodule.css.
 
 
+### Output File Use Cases
+
 We distinguish between CSS inlined into a build layer script and CSS output into a separate file based on the
 following use cases:
 
