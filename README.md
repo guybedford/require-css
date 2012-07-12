@@ -18,10 +18,10 @@ define(['css!styles/main'], function(css) {
 
 2. When run on the server, the CSS is simply ammended into a buffer (`css.buffer`, a string that can be accessed from the returned dependency API).
 
-3. When run as part of a build with the RequireJS Optimizer, the CSS can be output as:
-   1. CSS inlined into the build layer js script file.
-   2. A separate CSS file with the same name as the build layer script file, but with a .css extension.
-   
+3. When run as part of a build with the RequireJS Optimizer, the CSS is inlined into the build layer script file.
+
+4. When included with the alternative require: `'css!styles/main[]'`,
+
 The CSS is minified as part of the build, creating a CSS layer to match the js layer being built by the optimizer.
 
 The plugin handles automatic rewriting of all CSS url normalization for the CSS built output. Inlined CSS is loaded automatically rewritten based on the
@@ -33,9 +33,10 @@ Installation and Setup
 ----------------------
 
 The easiest setup is with volo (`npm install volo` / https://github.com/volojs/volo):
-``
+
+```
 volo add guybedford/require-css
-``
+```
 
 Volo will automatically install the following plugins:
 * requirejs/text
@@ -63,7 +64,7 @@ If installing without Volo, ensure you have the text plugin dependency in the sc
 Optimizer Configuration
 -----------------------
 
-## Basic Usage
+### Basic Usage
 
 Optimizer configuration:
 
