@@ -20,9 +20,7 @@ define(['css!styles/main'], function(css) {
 
 3. When run as part of a build with the RequireJS Optimizer, the CSS is inlined into the build layer script file.
 
-4. When included with the alternative require: `'css!styles/main[]'`,
-
-The CSS is minified as part of the build, creating a CSS layer to match the js layer being built by the optimizer.
+4. When included with the alternative require: `'css!styles/main[]'`, the CSS is minified as part of the build, creating a CSS layer to match the js layer being built by the optimizer.
 
 The plugin handles automatic rewriting of all CSS url normalization for the CSS built output. Inlined CSS is loaded automatically rewritten based on the
 current page baseURI.
