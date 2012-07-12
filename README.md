@@ -18,10 +18,10 @@ define(['css!styles/main'], function(css) {
 
 2. When run on the server, the CSS is simply ammended into a buffer (`css.buffer`, a string that can be accessed from the returned dependency API).
 
-3. When run as part of a build with the RequireJS Optimizer, the CSS is inlined into the build layer script file. The plugin handles automatic rewriting of all CSS url normalization for the CSS built output. Inlined CSS is loaded automatically rewritten based on the
+3. When run as part of a build with the RequireJS Optimizer, all 'css!' dependencies are inlined into the build layer script file, creating a CSS layer to match the build layer. The plugin handles automatic rewriting of all CSS url normalization for the CSS built output. When run, inlined CSS is loaded automatically rewritten based on the
 current page baseURI.
 
-4. When included with the alternative require: `'css!styles/main[]'`, the CSS is minified as part of the build, creating a CSS layer to match the js layer being built by the optimizer.
+4. When included with the alternative require syntax: `'css!styles/main[]'`, then instead of being inlined, the CSS layer is output to a separate CSS file. Suffixing is also supported to allow for CSS variants.
 
 
 
