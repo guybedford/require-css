@@ -1,8 +1,4 @@
 
-components/component-ie.css
-----------------
-components/component-ie.css
-
 components/component.css
 ----------------
 components/component.css
@@ -13,8 +9,7 @@ css/style.css
 
 core-components.js
 ----------------
-require-css/css!components/component[]
-require-css/css!components/component[ie]
+require-css/css!components/component!
 components/component.js
 require-css/css!>>core-components
 

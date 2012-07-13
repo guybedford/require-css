@@ -1,1 +1,1 @@
-define("require-css/css!components/component[]",[],function(){}),define("require-css/css!components/component[ie]",[],function(){}),require(["css!./component[]","css!./component[ie]"],function(){return{component:"is here"}}),define("components/component",function(){})
+define("require-css/css!components/component!",[],function(){}),require(["css!./component!"],function(){return{component:"is here"}}),define("components/component",function(){})

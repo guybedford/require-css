@@ -6,8 +6,9 @@ define(['text', 'require', 'module'], function(text, require, module) {
   css.pluginBuilder = './css.pluginBuilder';
   
   css.buffer = '';
+  css.fileBuffer = '';
+  
   css.stylesheet = undefined;
-  css.loadSuffixes = module.config().enableSuffixes || [];
   
   //support for CSS-API-style handlers for live editing
   css.addHandler = function(css, basePath, handler) {
@@ -15,11 +16,6 @@ define(['text', 'require', 'module'], function(text, require, module) {
       handler = basePath;
       
     this.add('/*+ ' + handler + ' */\n' + css + '\n/*- ' + handler + '*/', basePath);
-  }
-  
-  css.enableSuffix = function(suffix) {
-    if (this.loadSuffixes.indexOf(suffix) == -1)
-      this.loadSuffixes.push(suffix);
   }
   
   css.add = function(css, basePath) {
@@ -139,25 +135,16 @@ define(['text', 'require', 'module'], function(text, require, module) {
   }
 
   css.load = function(name, req, load, config) {
-    var suffix = name.match(/\[([^\]]*)\]/);
     
-    if (suffix) {
-      suffix = suffix[0];
-      if (suffix != '')
-        name = name.replace(/\[([^\]]*)\]/, '-$1');
-      else
-        name = name.replace(/\[([^\]]*)\]/, '');
-    }
-    
-    //ignore suffix loads unless specifically enabled or empty suffix
-    if (suffix && (suffix != '' || this.loadSuffixes.indexOf(suffix) == -1)) {
+    if (name.substr(name.length - 1, 1) == '!') {
+      name = name.substr(0, name.length - 2);
       load(css);
       return;
     }
       
     
-    if (name.substr(0, 1) == '>')
-      throw 'CSS buffer and write points can only be defined for builds.';
+    if (name.substr(0, 2) == '>>')
+      throw 'CSS buffer points can only be defined for builds.';
     
     req(['text!' + name + '.css'], function(CSS) {
       css.add(CSS, name);
