@@ -112,13 +112,43 @@ following use cases:
 2. *Conditional CSS*: The other use case for separate CSS output is for stylesheets that can be optionally included on the page - eg IE-specific styles, print styles,
 and media queries. Basically, any type of conditional CSS can be separately compiled.
 
-Require-css does not handle the conditional loading of these. It is suggested to use a separate plugin for the feature detection eg the Feature plugin.
+Require-css does not handle the conditional loading of these. It is suggested to use a separate plugin for the feature detection eg the [Feature plugin](https://github.com/jensarps/AMD-feature).
 
 With the feature plugin one could use:
 
 ```javascript
-require(['feature!css!my-css'], function(css) {
+require(['feature!conditional-css'], function(css) {
   //...
+});
+```
+
+Then have the feature defined something like - 
+
+```javascript
+define({
+  'conditional-css': [
+    {
+      isAvailable: function() {
+        //IE styles
+        return ie ? true: false;
+      },
+      implementation: 'css!style-ie'
+    },
+    {
+      isAvailable: function() {
+        //mobile styles
+        return mobile ? true : false;
+      },
+      implementation: 'css!style-mobile'
+    },
+    {
+      isAvailable: function() {
+        //all other cases
+        return true;
+      },
+      implementation: 'css!style'
+    }
+  ]
 });
 ```
 
