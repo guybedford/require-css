@@ -120,6 +120,7 @@ With the feature plugin one could use:
 require(['feature!css!my-css'], function(css) {
   //...
 });
+```
 
 With the css then being defined to the environment.
 
