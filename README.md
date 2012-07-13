@@ -21,7 +21,7 @@ define(['css!styles/main'], function(css) {
 3. When run as part of a build with the RequireJS Optimizer, all 'css!' dependencies are inlined into the build layer script file, creating a CSS layer to match the build layer. The plugin handles automatic rewriting of all CSS url normalization for the CSS built output. When run, inlined CSS is loaded automatically rewritten based on the
 current page baseURI.
 
-4. When included with the alternative require syntax: `'css!styles/main[]'`, then instead of being inlined, the CSS layer is output to a separate CSS file. Suffixing is also supported within the square brackets to allow for CSS variant definitions.
+4. When included with the alternative require syntax: `'css!styles/main!'`, then instead of being inlined, the CSS layer is output to a separate CSS file.
 
 
 
@@ -82,7 +82,7 @@ Optimizer configuration:
 If the contents of 'mymodule' are:
 
 ```javascript
-  require(['css!inline', 'css!page[]'], function(css) {
+  require(['css!inline', 'css!page!'], function(css) {
     //...
   });
 ```
@@ -95,7 +95,7 @@ Then the optimizer output would be:
 -mymodule.css containing:
  page.css
 
-Had there been further CSS inclusions with the suffix '[]' as part of the dependency tree, these would have also been included in mymodule.css.
+Had there been further CSS inclusions with the suffix '!' as part of the dependency tree, these would have also been included in mymodule.css.
 
 
 ### Output File Use Cases
@@ -109,63 +109,32 @@ following use cases:
    
    This is exactly as illustrated above.
 
-2. *CSS Suffixes*: The other use case for separate CSS output is for stylesheets that can be optionally included on the page - eg IE-specific styles, print styles,
+2. *Conditional CSS*: The other use case for separate CSS output is for stylesheets that can be optionally included on the page - eg IE-specific styles, print styles,
 and media queries. Basically, any type of conditional CSS can be separately compiled.
 
-Require-css does not handle the conditional loading of these, but purely provides a suffix mechanism for these CSS files.
+Require-css does not handle the conditional loading of these. It is suggested to use a separate plugin for the feature detection eg the Feature plugin.
 
-Example:
+With the feature plugin one could use:
 
 ```javascript
-require(['css!my-css[ie]', 'css!my-css'], function(css) {
+require(['feature!css!my-css'], function(css) {
+  //...
+});
+
+With the css then being defined to the environment.
+
+Perhaps there is room for separate plugins of the form:
+
+```javascript
+require(['ie!css!my-css', 'mobile!css!my-css'], function(css) {
   //...
 });
 ```
 
-Specify the enabled conditions in the config with:
+Where the separate 'ie' and 'mobile' plugins could be configurable for build environments and runtime detection.
 
-```javascript
-config: {
-  require-css: {
-    enableSuffixes: ['ie']
-  }
-}
-```
+Implementations of the above plugins would be welcomed.
 
-Alternatively, enable suffixes with the API:
-
-```javascript
-require(['css'], function(css) {
-  css.enableSuffix('ie');
-});
-```
-
-Require-css calls to suffixed CSS will only carry through if the suffix has been enabled as above.
-
-Run outside of a build, the example above will now load the files:
-- my-css-ie.css
-- my-css.css
-
-Then provided the standard build configuration:
-
-```javascript
-{
-  modules: [
-  {
-    name: 'mymodule',
-    include: ['css!>>mymodule']
-  }
-  ]
-}
-```
-
-Require-css will output:
-
-mymodule.js -- inlined with css from 'my-css.css'
-mymodule-ie.css -- the separate ie styles from 'my-css-ie.css'
-
-The above CSS file could either be included within conditional IE tags on the output page, or alternatively a conditional
-load can be made.
 
 
 Roadmap
