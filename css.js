@@ -2,6 +2,7 @@ define(['text', 'require', 'module'], function(text, require, module) {
   var css = {};
   
   var client = !!(typeof location !== 'undefined' && location.href);
+  var devMode = module.config().blockingDevelopmentMode || false;
   
   css.pluginBuilder = './css.pluginBuilder';
   
@@ -142,9 +143,11 @@ define(['text', 'require', 'module'], function(text, require, module) {
       return;
     }
       
-    
     if (name.substr(0, 2) == '>>')
       throw 'CSS buffer points can only be defined for builds.';
+    
+    if (devMode)
+      return;
     
     req(['text!' + name + '.css'], function(CSS) {
       css.add(CSS, name);
