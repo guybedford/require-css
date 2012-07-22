@@ -112,12 +112,16 @@ following use cases:
 2. *Conditional CSS*: The other use case for separate CSS output is for stylesheets that can be optionally included on the page - eg IE-specific styles, print styles,
 and media queries. Basically, any type of conditional CSS can be separately compiled.
 
-Require-css does not handle the conditional loading of these. It is suggested to use a separate plugin for the feature detection eg the [Feature plugin](https://github.com/jensarps/AMD-feature).
+Require-css does not handle the conditional loading of these. It is suggested to use a separate plugin for the feature detection 
 
-With the feature plugin one could use:
+eg 
+[Require-IS](https://github.com/guybedford/require-is)
+[Features](https://github.com/jensarps/AMD-feature)
+
+With the Require-IS, one can use:
 
 ```javascript
-require(['feature!conditional-css'], function(css) {
+require(['is!feature?conditional-css'], function(css) {
   //...
 });
 ```
@@ -125,46 +129,21 @@ require(['feature!conditional-css'], function(css) {
 Then have the feature defined something like - 
 
 ```javascript
-define({
-  'conditional-css': [
-    {
-      isAvailable: function() {
-        //IE styles
-        return ie ? true: false;
-      },
-      implementation: 'css!style-ie'
-    },
-    {
-      isAvailable: function() {
-        //mobile styles
-        return mobile ? true : false;
-      },
-      implementation: 'css!style-mobile'
-    },
-    {
-      isAvailable: function() {
-        //all other cases
-        return true;
-      },
-      implementation: 'css!style'
-    }
-  ]
+require.config({
+  is: {
+    feature: false
+  }
 });
 ```
 
 With the css then being defined to the environment.
 
-Perhaps there is room for separate plugins of the form:
+Examples of features that could be used are:
+* _is!ie?ie-style_
+* _is!mobile?mobile-style_
+* _is!ipad?ipad-style_
 
-```javascript
-require(['ie!css!my-css', 'mobile!css!my-css'], function(css) {
-  //...
-});
-```
-
-Where the separate 'ie' and 'mobile' plugins could be configurable for build environments and runtime detection.
-
-Implementations of the above plugins would be welcomed.
+Detection would need to be handled separately.
 
 
 
