@@ -3,18 +3,16 @@ components/component.css
 ----------------
 components/component.css
 
-css/style.css
+style/style.css
 ----------------
-css/style.css
+style/style.css
+
+app.js
+----------------
+require-css/css!style/style
+app.js
 
 core-components.js
 ----------------
 require-css/css!components/component!
 components/component.js
-require-css/css!>>core-components
-
-app.js
-----------------
-require-css/css!c/style
-app.js
-require-css/css!>>app

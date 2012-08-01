@@ -8,20 +8,20 @@
       css: 'require-css/css'
     }
   },
-  paths: {
-    c: 'css'
-  },
   modules: [
-    {
-      name: 'core-components',
-      create: true,
-      include: ['components/component', 'css!>>core-components'],
-      exclude: ['css']
-    },
-    {
-      name: 'app',
-      include: ['css!>>app'],
-      exclude: ['core-components', 'css']
-    }
+  {
+    name: 'app',
+    //include: ['css!>>app'], //(remove this if using the 'onLayerComplete' pull request)
+    exclude: ['core-components']
+  },
+  {
+    name: 'core-components',
+    create: true,
+    include: ['components/component'],
+              //'css!>>core-components'] //(remove this if using the 'onLayerComplete' pull request)
+    exclude: ['css']
+  }
   ]
+  //name: 'app.js',
+  //out: 'app-built.js'
 })

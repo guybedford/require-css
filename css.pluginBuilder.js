@@ -1,5 +1,6 @@
-define(['text', './css.js', 'require'], function(text, css, req) {
-  
+define(['./css.api', 'require'], function(cssAPI, req) {
+  var css = {};
+
   //todo: include compression with redundancy
   var compress = function(css) {
     return css;
@@ -105,7 +106,12 @@ define(['text', './css.js', 'require'], function(text, css, req) {
   //when adding to the link buffer, paths are normalised to the baseUrl
   //when removing from the link buffer, paths are normalised to the output file path
   
-  css.fileBuffer = '';
+  css.add = function() {
+    return cssAPI.add.apply(cssAPI, arguments);
+  }
+  css.clear = function() {
+    return cssAPI.clear.apply(cssAPI, arguments);
+  }
   
   css.normalize = function(name, normalize) {
     if (name.substr(name.length - 1, 1) == '!') {
@@ -124,12 +130,13 @@ define(['text', './css.js', 'require'], function(text, css, req) {
   }
   
   css.load = function(name, req, load, config) {
+    //store config
+    css.config = css.config || config;
     //just return
-    load(this);
+    load();
   }
   
   css.write = function(pluginName, moduleName, write) {
-    
     //all css defines made as empty, unless a write or buffer point
     //but we do inclusion on write not load for the optimizer (to allow exclusions!)
     if (moduleName.substr(0, 2) != '>>') {
@@ -145,53 +152,43 @@ define(['text', './css.js', 'require'], function(text, css, req) {
       
       //check if we have a blocking file syntax for css
       if (file)
-        this.fileBuffer += this.convertStyleBase(loaded_css, require.toUrl(fileName), require.toUrl('.'));
+        cssAPI.fileBuffer += cssAPI.convertStyleBase(loaded_css, require.toUrl(fileName), require.toUrl('.'));
       //otherwise load into our standard buffer
       else
-        this.buffer += this.convertStyleBase(loaded_css, require.toUrl(fileName), require.toUrl('.'));
+        cssAPI.buffer += cssAPI.convertStyleBase(loaded_css, require.toUrl(fileName), require.toUrl('.'));
       
+      //write as a stub
       write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
       return;
     }
     
-
-    /*
-      modules = [
-      {
-        main: 'my.css',
-        include: ['css!some[ie]', 'css!>>my']
-      },
-      {
-        name: 'another',
-        include: ['css!thing', 'css!two', 'css!>>']
-      }
-      ];
-    
-      buffer points specified by 'css!>>', outputs the current buffer into the script (asynchronous)
-      write and buffer points specified by 'css!>>my/file' to perform both at once
-    
-      write points specified by 'css!>my/file', output the fileBuffer with prefixes (blocking)
-      so we get outputs: my/file.css, my/file.ie.css, my/file.print.css etc
-    */
-    
     //buffer / write point
     if (moduleName.substr(0, 2) == '>>')
-      this.onBuildComplete(pluginName + '!' + moduleName, moduleName.substr(2), write);
+      css.onLayerComplete(moduleName.substr(2), write);
   }
   
-  css.onBuildComplete = function(moduleName, path, write) {
+  css.onLayerComplete = function(name, write) {
     //inline the inline buffer
-    var output = compress(css.escape(css.buffer));
-    if (output != '') {
-      write('require([\'css\'], function(css) {\n  css.add("' + output + '");\n})');
-      css.buffer = '';
-    }
+    css.writeBuffer(write);
     
     //write the file buffer
-    var output = compress(css.convertStyleBase(this.fileBuffer, require.toUrl('.'), require.toUrl(path)));
+    if (cssAPI.fileBuffer != '') {
+      var path = (css.config.dir ? css.config.dir + name + '.css' : css.config.out.replace(/\.js$/, '.css'));
+      if (typeof console != 'undefined' && console.log)
+        console.log('Writing CSS! file: ' + name + '\n');
+      var output = compress(cssAPI.convertStyleBase(cssAPI.fileBuffer, require.toUrl('.'), path));
+      if (output != '') {
+        saveFile(path, output);
+        cssAPI.fileBuffer = '';
+      }
+    }
+  }
+  
+  css.writeBuffer = function(write) {
+    var output = compress(css.escape(cssAPI.buffer));
     if (output != '') {
-      saveFile(require.toUrl(path + '.css'), output);
-      this.fileBuffer = '';
+      write('require([\'css\'], function(css) {\n  css.add("' + output + '");\n})');
+      cssAPI.buffer = '';
     }
   }
   
