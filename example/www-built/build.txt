@@ -11,8 +11,10 @@ app.js
 ----------------
 require-css/css!style/style
 app.js
+require-css/css!>>app
 
 core-components.js
 ----------------
 require-css/css!components/component!
 components/component.js
+require-css/css!>>core-components
