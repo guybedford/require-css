@@ -18,7 +18,7 @@ define(['css!styles/main'], function(css) {
 
 2. When run on the server, the CSS is simply ammended into a buffer (`css.buffer`).
 
-3. When run as part of a build with the RequireJS Optimizer, 'css!' dependencies are inlined into the built layer and are compatible with layer exclusions and inclusions.
+3. When run as part of a build with the RequireJS Optimizer, 'css!' dependencies are inlined into the built layer JavaScript for automatic injection. The layers can be built fully compatible with layer exclusions and inclusions.
 
 4. When included with the alternative require syntax: `'css!styles/main!'`, then instead of being inlined, the CSS layer is output to a separate CSS file.
 
