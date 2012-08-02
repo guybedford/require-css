@@ -14,17 +14,15 @@ define(['css!styles/main'], function(css) {
 });
 ```
 
-1. When run on the client, the CSS is downloaded and injected into the head dynamically. The dependency provided by the require is purely the API itself, and not the actual CSS.
+1. When run on the client, the CSS is downloaded and injected into the head dynamically.
 
-2. When run on the server, the CSS is simply ammended into a buffer (`css.buffer`, a string that can be accessed from the returned dependency API).
+2. When run on the server, the CSS is simply ammended into a buffer (`css.buffer`).
 
-3. When run as part of a build with the RequireJS Optimizer, all 'css!' dependencies are inlined into the build layer script file, creating a CSS layer to match the build layer. The plugin handles automatic rewriting of all CSS url normalization for the CSS built output. When run, inlined CSS is loaded automatically rewritten based on the
-current page baseURI.
+3. When run as part of a build with the RequireJS Optimizer, 'css!' dependencies are inlined into the built layer and are compatible with layer exclusions and inclusions.
 
 4. When included with the alternative require syntax: `'css!styles/main!'`, then instead of being inlined, the CSS layer is output to a separate CSS file.
 
-
-
+_All url path normalization within the CSS files is handled automatically_
 
 
 Installation and Setup
@@ -47,14 +45,8 @@ map: {
   '*': {
     css: 'require-css/css'
   }
-},
-paths = {
-  c: 'css'
 }
 ```
-
-Note that this will make it impossible to reference a folder called 'css'.
-Thus it can help to include a parameter ('c' here) which references your css folder for easier paths.
 
 If installing without Volo, ensure you have the text plugin dependency in the scripts folder (the same folder the require-css folder is in).
 
@@ -90,7 +82,7 @@ If the contents of 'mymodule' are:
 Then the optimizer output would be:
 
 -mymodule.js containing:
- inline.css ready for dynamic injection
+ inline.css which will be dynamically injected
 
 -mymodule.css containing:
  page.css
@@ -98,53 +90,31 @@ Then the optimizer output would be:
 Had there been further CSS inclusions with the suffix '!' as part of the dependency tree, these would have also been included in mymodule.css.
 
 
-### Output File Use Cases
+Conditional CSS
+---
 
-We distinguish between CSS inlined into a build layer script and CSS output into a separate file based on the
-following use cases:
+Some styles are conditional on the environment. For example mobile stylesheets and IE-specific stylesheets.
 
-1. *Blocking CSS:* The primary advantage of a dedicated CSS file is to allow the standard link tag inclusion of CSS to specify CSS that should block the page render.
-   (Assuming that one includes the optimized source as part of using 'data-main' or a similar asynchronous approach)
-   CSS that that can be loaded only at the point the script loads is still inlined in the JS layer.
-   
-   This is exactly as illustrated above.
+To manage this, use the [Require-IS](https://github.com/guybedford/require-is) module. 
 
-2. *Conditional CSS*: The other use case for separate CSS output is for stylesheets that can be optionally included on the page - eg IE-specific styles, print styles,
-and media queries. Basically, any type of conditional CSS can be separately compiled.
-
-Require-css does not handle the conditional loading of these. It is suggested to use a separate plugin for the feature detection 
-
-eg 
-[Require-IS](https://github.com/guybedford/require-is)
-[Features](https://github.com/jensarps/AMD-feature)
-
-With the Require-IS, one can use:
+With the Require-IS, one can do:
 
 ```javascript
-require(['is!feature?conditional-css'], function(css) {
+require(['is!mobile?mobile-css'], function(css) {
   //...
 });
 ```
 
-Then have the feature defined something like - 
+Mobile detection can be defined through a detection script in Require-IS, such as:
 
+mobile.js:
 ```javascript
-require.config({
-  is: {
-    feature: false
-  }
+define(function() {
+  return navigator.userAgent.match(/iPhone/); //(just iphone detection as an example)
 });
 ```
 
-With the css then being defined to the environment.
-
-Examples of features that could be used are:
-* _is!ie?ie-style_
-* _is!mobile?mobile-style_
-* _is!ipad?ipad-style_
-
-Detection would need to be handled separately.
-
+Separate build layers can then be made for mobile specific use. Read more at the [Require-IS](https://github.com/guybedford/require-is) project page.
 
 
 Roadmap
