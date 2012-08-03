@@ -1,5 +1,4 @@
 define(['require', 'module', './css.api'], function(require, module, cssAPI) {
-  console.log('define css');
   var css = {};
   
   var client = require.isBrowser;
