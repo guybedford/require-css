@@ -97,10 +97,10 @@ Some styles are conditional on the environment. For example mobile stylesheets a
 
 To manage this, use the [Require-IS](https://github.com/guybedford/require-is) module. 
 
-With the Require-IS, one can do:
+With Require-IS, one can do:
 
 ```javascript
-require(['is!mobile?mobile-css'], function(css) {
+require(['is!mobile?css!mobile-css'], function(css) {
   //...
 });
 ```
