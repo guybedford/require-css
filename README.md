@@ -20,7 +20,7 @@ define(['css!styles/main'], function(css) {
 
 3. When run as part of a build with the RequireJS Optimizer, 'css!' dependencies are inlined into the built layer JavaScript for automatic injection. The layers can be built fully compatible with layer exclusions and inclusions.
 
-4. When included with the alternative require syntax: `'css!styles/main!'`, then instead of being inlined, the CSS layer is output to a separate CSS file.
+4. When setting the 'separateCSS' build parameter flag to true, the RequireJS Optimizer creates a separate CSS file matching the module layer in the build.
 
 _All url path normalization within the CSS files is handled automatically_
 
@@ -63,18 +63,18 @@ Optimizer configuration:
   modules: [
   {
     name: 'mymodule',
-    include: ['css!>>mymodule']
+    include: ['css!>>']
   }
   ]
 }
 ```
 
-*Note: the use of the include, `'css!>>mymodule'`, is necessary pending r.js pull request #210 (https://github.com/jrburke/r.js/pull/210).*
+*Note: the use of the include, `'css!>>'`, is necessary pending r.js pull request #210 (https://github.com/jrburke/r.js/pull/210).*
 
 If the contents of 'mymodule' are:
 
 ```javascript
-  require(['css!inline', 'css!page!'], function(css) {
+  require(['css!style', 'css!page'], function(css) {
     //...
   });
 ```
@@ -82,12 +82,33 @@ If the contents of 'mymodule' are:
 Then the optimizer output would be:
 
 -mymodule.js containing:
- inline.css which will be dynamically injected
+ inline.css and page.css which will be dynamically injected
 
--mymodule.css containing:
- page.css
+### Separate File Output
 
-Had there been further CSS inclusions with the suffix '!' as part of the dependency tree, these would have also been included in mymodule.css.
+To output the CSS to a separate file, use the configuration:
+
+```javascript
+{
+  separateCSS: true,
+  modules: [
+  {
+    name: 'mymodule',
+    include: ['css!>>mymodule']
+  }
+  ]
+}
+```
+
+This will then output all the css to the file `mymodule.css`.
+
+*To exclude certain CSS from being output as separate files, use the inclusion syntax:*
+
+```javascript
+require(['css!mycss!], ...);
+```
+
+*The suffix `!` will ensure that the CSS is never output to a file.*
 
 
 Conditional CSS

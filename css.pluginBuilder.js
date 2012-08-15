@@ -121,7 +121,7 @@ define(['./css.api', 'require'], function(cssAPI, req) {
   }
   
   css.escape = function(content) {
-    return content.replace(/(['\\])/g, '\\$1')
+    return content.replace(/(["'\\])/g, '\\$1')
         .replace(/[\f]/g, "\\f")
         .replace(/[\b]/g, "\\b")
         .replace(/[\n]/g, "\\n")
@@ -141,21 +141,17 @@ define(['./css.api', 'require'], function(cssAPI, req) {
     //but we do inclusion on write not load for the optimizer (to allow exclusions!)
     if (moduleName.substr(0, 2) != '>>') {
       
-      var file = moduleName.substr(moduleName.length - 1, 1) == '!';
+      var scriptOnly = moduleName.substr(moduleName.length - 1, 1) == '!';
       
-      if (file)
+      if (scriptOnly)
         fileName = moduleName.substr(0, moduleName.length - 1);
       else
         fileName = moduleName;
         
       var loaded_css = loadFile(req.toUrl(fileName + '.css'));
       
-      //check if we have a blocking file syntax for css
-      if (file)
-        cssAPI.fileBuffer += cssAPI.convertStyleBase(loaded_css, require.toUrl(fileName), require.toUrl('.'));
-      //otherwise load into our standard buffer
-      else
-        cssAPI.buffer += cssAPI.convertStyleBase(loaded_css, require.toUrl(fileName), require.toUrl('.'));
+      //add to the appropriate buffer
+      cssAPI.add(loaded_css, fileName, scriptOnly);
       
       //write as a stub
       write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
@@ -169,27 +165,28 @@ define(['./css.api', 'require'], function(cssAPI, req) {
   
   css.onLayerComplete = function(name, write) {
     //inline the inline buffer
-    css.writeBuffer(write);
+    css.writeScriptBuffer(write);
     
     //write the file buffer
-    if (cssAPI.fileBuffer != '') {
+    if (css.config.separateCSS && cssAPI.buffer != '') {
       var path = (css.config.dir ? css.config.dir + name + '.css' : css.config.out.replace(/\.js$/, '.css'));
       if (typeof console != 'undefined' && console.log)
         console.log('Writing CSS! file: ' + name + '\n');
-      var output = compress(cssAPI.convertStyleBase(cssAPI.fileBuffer, require.toUrl('.'), path));
-      if (output != '') {
+      var output = compress(cssAPI.convertStyleBase(cssAPI.buffer, require.toUrl('.'), path));
+      if (output != '')
         saveFile(path, output);
-        cssAPI.fileBuffer = '';
-      }
     }
+    
+    cssAPI.clear();
   }
   
-  css.writeBuffer = function(write) {
-    var output = compress(css.escape(cssAPI.buffer));
-    if (output != '') {
+  css.writeScriptBuffer = function(write) {
+    var outputBuffer = css.config.separateCSS ? cssAPI.scriptBuffer : cssAPI.buffer + cssAPI.scriptBuffer;
+    
+    var output = compress(css.escape(outputBuffer));
+    
+    if (output != '')
       write('require([\'css\'], function(css) {\n  css.add("' + output + '");\n})');
-      cssAPI.buffer = '';
-    }
   }
   
   return css;

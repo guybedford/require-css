@@ -41,21 +41,15 @@ define(['require', 'module', './css.api'], function(require, module, cssAPI) {
   }
 
   css.load = function(name, req, load, config) {
-    if (name.substr(name.length - 1, 1) == '!') {
+    if (name.substr(name.length - 1, 1) == '!')
       name = name.substr(0, name.length - 2);
-      load(css);
-      return;
-    }
       
     if (name.substr(0, 2) == '>>')
       throw 'CSS buffer points can only be defined for builds.';
     
-    if (devMode)
-      return;
-    
     req(['text!' + name + '.css'], function(CSS) {
       cssAPI.add(CSS, name);
-      load(css);
+      load(cssAPI);
     });
   };
   

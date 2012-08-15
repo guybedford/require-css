@@ -3,11 +3,11 @@ define({
   onBufferWrite: function() {},
   
   buffer: '',
-  fileBuffer: '',
+  scriptBuffer: '',
     
-  add: function(css, basePath) {
-    if (typeof css != 'string')
-      return;
+  add: function(css, basePath, scriptOnly) {
+    //if (typeof css != 'string')
+    //  return;
 
     //CSS paths are normalized based on an optional basePath and the requirejs config
     //If a basePath is provided, this is assumed to specify the location of the css root
@@ -22,12 +22,17 @@ define({
     if (basePath)
       css = this.convertStyleBase(css, require.toUrl(basePath), require.toUrl('.'));
     
-    this.buffer += css;
+    if (!scriptOnly)
+      this.buffer += css;
+    else
+      this.scriptBuffer += css;
+
     this.onBufferWrite();
   },
   
   clear: function() {
     this.buffer = '';
+    this.scriptBuffer = '';
     this.onBufferWrite();
   },
     
