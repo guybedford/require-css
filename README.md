@@ -31,7 +31,7 @@ Installation and Setup
 The easiest setup is with volo (`npm install volo` / https://github.com/volojs/volo):
 
 ```
-volo add guybedford/require-css
+volo add guybedford/css
 ```
 
 Volo will automatically install the following plugins:
