@@ -38,17 +38,7 @@ Volo will automatically install the following plugins:
 * requirejs/text
   The standard text plugin provided by Require JS - used for loading CSS resources on the client.
 
-To allow the usage with 'css!', set the path to require-css in the map config:
-
-```javascript
-map: {
-  '*': {
-    css: 'require-css/css'
-  }
-}
-```
-
-If installing without Volo, ensure you have the text plugin dependency in the scripts folder (the same folder the require-css folder is in).
+If installing without Volo, ensure you have the 'text' plugin dependency in the scripts folder.
 
 
 Optimizer Configuration
@@ -82,7 +72,7 @@ If the contents of 'mymodule' are:
 Then the optimizer output would be:
 
 -mymodule.js containing:
- inline.css and page.css which will be dynamically injected
+ style.css and page.css which will be dynamically injected
 
 ### Separate File Output
 
@@ -105,10 +95,10 @@ This will then output all the css to the file `mymodule.css`.
 *To exclude certain CSS from being output as separate files, use the inclusion syntax:*
 
 ```javascript
-require(['css!mycss!], ...);
+require(['css!mycss!'], ...);
 ```
 
-*The suffix `!` will ensure that the CSS is never output to a file.*
+*The suffix `!` will ensure that the CSS is never output to a file and always inlined dynamically in the js.*
 
 
 Conditional CSS
@@ -116,7 +106,7 @@ Conditional CSS
 
 Some styles are conditional on the environment. For example mobile stylesheets and IE-specific stylesheets.
 
-To manage this, use the [Require-IS](https://github.com/guybedford/require-is) module. 
+To manage this, use the [Require-IS](https://github.com/guybedford/is) module. 
 
 With Require-IS, one can do:
 
@@ -135,7 +125,7 @@ define(function() {
 });
 ```
 
-Separate build layers can then be made for mobile specific use. Read more at the [Require-IS](https://github.com/guybedford/require-is) project page.
+Separate build layers can then be made for mobile specific use. Read more at the [Require-IS](https://github.com/guybedford/is) project page.
 
 
 Roadmap
