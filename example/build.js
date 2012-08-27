@@ -6,7 +6,7 @@
   separateCSS: true,
   map: {
     '*': {
-      css: 'require-css/css'
+      css: 'require-css/main'
     }
   },
   modules: [
