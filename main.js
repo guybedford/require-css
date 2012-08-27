@@ -37,7 +37,13 @@ define(['require', 'module', './css.api'], function(require, module, cssAPI) {
       this.stylesheet.setAttribute('type', 'text/css');
       document.getElementsByTagName('head')[0].appendChild(this.stylesheet);
     }
-    this.stylesheet.innerHTML = cssAPI.convertStyleBase(cssAPI.buffer, require.toUrl('.'), document.baseURI);
+    
+    //IE
+    if (this.stylesheet.styleSheet)
+      this.stylesheet.styleSheet.cssText += cssAPI.convertStyleBase(cssAPI.buffer, require.toUrl('.'), document.baseURI);
+    //Others
+    else
+      this.stylesheet.innerHTML += cssAPI.convertStyleBase(cssAPI.buffer, require.toUrl('.'), document.baseURI);
   }
 
   css.load = function(name, req, load, config) {
