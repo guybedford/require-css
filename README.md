@@ -38,7 +38,17 @@ Volo will automatically install the following plugins:
 * requirejs/text
   The standard text plugin provided by Require JS - used for loading CSS resources on the client.
 
-If installing without Volo, ensure you have the 'text' plugin dependency in the scripts folder.
+Volo will also create the 'css' wrapper for easy requiring.
+
+If installing without Volo, ensure you have the 'text' plugin dependency in the scripts folder, and add the 'css' shortcut reference in the map config to 'css/main':
+
+```javascript
+map: {
+  '*': {
+    'css': 'css/main'
+  }
+}
+```
 
 
 Optimizer Configuration
