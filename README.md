@@ -69,7 +69,7 @@ Optimizer configuration:
 }
 ```
 
-*Note: the use of the include, `'css!>>'`, is necessary pending r.js pull request #210 (https://github.com/jrburke/r.js/pull/210).*
+*Note: the use of the include, `'css!>>'`, is necessary pending r.js pull request #241 (https://github.com/jrburke/r.js/pull/241).*
 
 If the contents of 'mymodule' are:
 
