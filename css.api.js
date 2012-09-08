@@ -22,10 +22,13 @@ define({
     if (basePath)
       css = this.convertStyleBase(css, require.toUrl(basePath), require.toUrl('.'));
     
-    if (!scriptOnly)
-      this.buffer += css;
-    else
+    if (!scriptOnly) {
+      if (this.buffer.indexOf(css) == -1)
+        this.buffer += css;
+    }
+    else {
       this.scriptBuffer += css;
+    }
 
     this.onBufferWrite();
   },

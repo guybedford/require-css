@@ -48,7 +48,7 @@ define(['require', 'module', './css.api'], function(require, module, cssAPI) {
       throw 'CSS buffer points can only be defined for builds.';
     
     req(['text!' + name + '.css'], function(CSS) {
-      cssAPI.add(CSS, name);
+      css.add(CSS, name);
       load(cssAPI);
     });
   };
