@@ -140,7 +140,7 @@ define(['module', 'require', './normalize', './onload-support', 'text'], functio
         complete();
       };
       document.getElementsByTagName('head')[0].appendChild(link);
-      cssAPI.link.links[fileUrl] = link;
+      linkAPI.links[fileUrl] = link;
     },
     inject: function(name, css) {
       styleAPI.inject(name, css);
@@ -170,9 +170,9 @@ define(['module', 'require', './normalize', './onload-support', 'text'], functio
       var loadQueue = queueAPI.queue.load;
       var injectQueue = queueAPI.queue.inject;
       for (var i = 0; i < loadQueue.length; i++)
-        loader.load(loadQueue[0], loadQueue[1]);
+        loader.load(loadQueue[i][0], loadQueue[i][1]);
       for (var i = 0; i < injectQueue.length; i++)
-        loader.inject(injectQueue[0], injectQueue[1]);
+        loader.inject(injectQueue[i][0], injectQueue[i][1]);
     }
   };
   
@@ -181,7 +181,7 @@ define(['module', 'require', './normalize', './onload-support', 'text'], functio
   //no loader given in config - need to do feature detection
   if (!loaders[cssAPI.loader]) {
     onLoadSupport(function(supported) {
-      cssAPI.loader = support ? 'link' : 'style';
+      cssAPI.loader = supported ? 'link' : 'style';
       queueAPI.flush(loaders[cssAPI.loader]);
     });
     //while support check is running, queue any requests
@@ -189,7 +189,6 @@ define(['module', 'require', './normalize', './onload-support', 'text'], functio
   }
   
   cssAPI.load = function(name, req, load, config) {
-    //being used as a RequireJS plugin load
     if (name.substr(name.length - 5, 4) != '.css')
       name += '.css';
     loaders[cssAPI.loader].load(req.toUrl(name), function() {
