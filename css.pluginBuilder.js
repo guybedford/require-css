@@ -1,13 +1,17 @@
-define(['./css.api', 'require'], function(cssAPI, req) {
-  var css = {};
+define(['require', './normalize'], function(req, normalize) {
+  var baseUrl = req.toUrl('.');
+  
+  var cssAPI = {};
 
+  cssAPI.buffer = {};
+  
   //todo: include compression with redundancy
-  var compress = function(css) {
+  function compress(css) {
     return css;
   }
   
   //load file code - stolen from text plugin
-  var loadFile = function(path) {
+  function loadFile(path) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       var fs = require.nodeRequire('fs');
       var file = fs.readFileSync(path, 'utf8');
@@ -26,11 +30,11 @@ define(['./css.api', 'require'], function(cssAPI, req) {
         stringBuffer = new java.lang.StringBuffer();
         line = input.readLine();
         if (line && line.length() && line.charAt(0) === 0xfeff)
-            line = line.substring(1);
+          line = line.substring(1);
         stringBuffer.append(line);
         while ((line = input.readLine()) !== null) {
-            stringBuffer.append(lineSeparator);
-            stringBuffer.append(line);
+          stringBuffer.append(lineSeparator);
+          stringBuffer.append(line);
         }
         content = String(stringBuffer.toString());
       }
@@ -41,7 +45,7 @@ define(['./css.api', 'require'], function(cssAPI, req) {
   }
   
   
-  var saveFile = function(path, data) {
+  function saveFile(path, data) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       var fs = require.nodeRequire('fs');
       fs.writeFileSync(path, data, 'utf8');
@@ -60,7 +64,7 @@ define(['./css.api', 'require'], function(cssAPI, req) {
         output.write(0xffef);
         output.write(data);
         
-        //hmm...
+        //hmm... help! [Rhino support really isn't an issue but a niceity]
         /* stringBuffer = new java.lang.StringBuffer();
         
         stringBuffer.append(data);
@@ -96,31 +100,10 @@ define(['./css.api', 'require'], function(cssAPI, req) {
     }
   }
   
-  //separate buffer for blocking css
-  //specified by css!my/css[], css!my/css[ie], css!my/css[custom-suffix] etc
-  //part in [] corresponds to a prefix to add to the filename
-  //so in build, we create two files
-  //build.css, build.ie7.css
-  //this allows for media query / ie stylesheet separation
-  
   //when adding to the link buffer, paths are normalised to the baseUrl
   //when removing from the link buffer, paths are normalised to the output file path
   
-  css.add = function() {
-    return cssAPI.add.apply(cssAPI, arguments);
-  }
-  css.clear = function() {
-    return cssAPI.clear.apply(cssAPI, arguments);
-  }
-  
-  css.normalize = function(name, normalize) {
-    if (name.substr(name.length - 1, 1) == '!') {
-      return normalize(name.substr(0, name.length - 1)) + '!';
-    }
-    return normalize(name);
-  }
-  
-  css.escape = function(content) {
+  function escape(content) {
     return content.replace(/(["'\\])/g, '\\$1')
         .replace(/[\f]/g, "\\f")
         .replace(/[\b]/g, "\\b")
@@ -129,65 +112,84 @@ define(['./css.api', 'require'], function(cssAPI, req) {
         .replace(/[\r]/g, "\\r");
   }
   
-  css.load = function(name, req, load, config) {
+  cssAPI.stubs = [];
+  
+  cssAPI.load = function(name, req, load, config) {
     //store config
-    css.config = css.config || config;
-    //just return
+    cssAPI.config = cssAPI.config || config;
+    //just return - 'write' calls are made after exclusions so we run loading there
     load();
   }
   
-  css.write = function(pluginName, moduleName, write) {
-    //all css defines made as empty, unless a write or buffer point
-    //but we do inclusion on write not load for the optimizer (to allow exclusions!)
+  cssAPI.write = function(pluginName, moduleName, write) {
     if (moduleName.substr(0, 2) != '>>') {
       
-      var scriptOnly = moduleName.substr(moduleName.length - 1, 1) == '!';
+      var fileName = moduleName;
       
-      if (scriptOnly)
-        fileName = moduleName.substr(0, moduleName.length - 1);
-      else
-        fileName = moduleName;
-        
-      var loaded_css = loadFile(req.toUrl(fileName + '.css'));
+      if (fileName.substr(fileName.length - 5, 4) != '.cs')
+        fileName += '.css';
       
-      //add to the appropriate buffer
-      cssAPI.add(loaded_css, fileName, scriptOnly);
+      fileName = req.toUrl(fileName);
+      
+      //external URLS don't get added (just like JS)
+      if (fileName.substr(0, 7) == 'http://' || fileName.substr(0, 8) == 'https://')
+        return;
+      
+      //add to the buffer
+      var css = loadFile(fileName);
+      css = normalize(css, fileName, baseUrl);
+      cssAPI.inject(fileName, css);
       
       //write as a stub
-      write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
-      return;
+      cssAPI.stubs.push(pluginName + '!' + moduleName);
+      cssAPI.pluginName = cssAPI.pluginName || pluginName;
     }
     
     //buffer / write point
-    if (moduleName.substr(0, 2) == '>>')
-      css.onLayerComplete(moduleName.substr(2), write);
+    else
+      cssAPI.onLayerComplete(moduleName.substr(2), write);
   }
   
-  css.onLayerComplete = function(name, write) {
-    //inline the inline buffer
-    css.writeScriptBuffer(write);
+  cssAPI.onLayerComplete = function(name, write) {
+    //performs all writing
+    var path = (cssAPI.config.dir ? cssAPI.config.dir + name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css'));
     
-    //write the file buffer
-    if (css.config.separateCSS && cssAPI.buffer != '') {
-      var path = (css.config.dir ? css.config.dir + name + '.css' : css.config.out.replace(/\.js$/, '.css'));
+    var css = '';
+    for (var n in cssAPI.buffer)
+      css += cssAPI.buffer[n];
+    
+    var output = compress(normalize(css, baseUrl, path));
+    
+    if (output != '') {
       if (typeof console != 'undefined' && console.log)
         console.log('Writing CSS! file: ' + name + '\n');
-      var output = compress(cssAPI.convertStyleBase(cssAPI.buffer, require.toUrl('.'), path));
-      if (output != '')
-        saveFile(path, output);
+      
+      saveFile(path, output);
+      
+      //check if we need to auto load the new built css file as a dependency, or if
+      //it will be included manually with a <link> tag.
+      var deps = [];
+      if (cssAPI.config.loadCSS !== false) {
+        var outputName = normalize.convertURIBase(path.substr(1), '/', baseUrl);
+        outputName = outputName.substr(0, outputName.length - 4);
+        deps.push(cssAPI.pluginName + '!' + outputName);
+      }
+      
+      //write out all the stubs, including a dependency on the build css file if specified
+      for (var i = 0; i < cssAPI.stubs.length; i++)
+        write('define(\'' + cssAPI.stubs[i] + '\', ' + JSON.stringify(deps) + ', function(){});');
+      
+      cssAPI.clear();
+      cssAPI.stubs = [];
     }
-    
-    cssAPI.clear();
   }
   
-  css.writeScriptBuffer = function(write) {
-    var outputBuffer = css.config.separateCSS ? cssAPI.scriptBuffer : cssAPI.buffer + cssAPI.scriptBuffer;
-    
-    var output = compress(css.escape(outputBuffer));
-    
-    if (output != '')
-      write('require([\'css\'], function(css) {\n  css.add("' + output + '");\n})');
+  cssAPI.inject = function(name, css) {
+    cssAPI.buffer[name] = css;
+  }
+  cssAPI.clear = function() {
+    cssAPI.buffer = {};
   }
   
-  return css;
+  return cssAPI;
 });

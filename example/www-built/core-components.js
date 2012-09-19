@@ -1,1 +1,1 @@
-define("require-css/css!components/component!",[],function(){}),require(["css!./component!"],function(){return{component:"is here"}}),define("components/component",function(){}),require(["css"],function(e){e.add("\nbody {\n  background-color: red;\n}\n")})
+require(["css!./component"],function(){return{component:"is here"}}),define("components/component",function(){}),define("require-css/css!components/component",["require-css/css!core-components"],function(){})
