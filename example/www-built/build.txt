@@ -15,6 +15,6 @@ require-css/css!>>app
 
 core-components.js
 ----------------
-require-css/css!components/component
+require-css/css!components/component!
 components/component.js
 require-css/css!>>core-components
