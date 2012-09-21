@@ -20,66 +20,100 @@
  *
  * config: {
  *   css: {
- *     loader: 'style'
+ *     loaderID: './link',
+ *     definedCSS: ['clearfix', 'asdf', 'aasdf']
  *   }
  * }
  *
  * Otherwise environment detection will be used as listed.
  *
  */
-define(['module', 'require', './normalize', './onload-support', 'text'], function(module, require, normalize, onLoadSupport, text) {
+define(['module', 'require', './normalize', 'text'], function(module, require, normalize, text) {
   
   var baseUrl = require.toUrl('.');
   
   var cssAPI = {};
+
+  //string hashing for naming css strings allowing for reinjection avoidance
+  //courtesy of http://erlycoder.com/49/javascript-hash-functions-to-convert-string-into-integer-hash-
+  var djb2 = function(str) {
+    var hash = 5381;
+    for (i = 0; i < str.length; i++)
+      hash = ((hash << 5) + hash) + str.charCodeAt(i); /* hash * 33 + c */
+    return hash;
+  }
   
   cssAPI.pluginBuilder = './css.pluginBuilder';
   
-  var loaders = {};
-  
-  var bufferAPI = loaders.buffer = {
-    buffer: {},
-    inject: function(name, css) {  
-      bufferAPI.buffer[name] = css;
-    },
-    load: function(fileUrl, complete) {
-      //dont load if already loaded
-      if (bufferAPI.buffer[fileUrl]) {
-        complete();
-        return;
+  cssAPI.buffer = {};
+  cssAPI.Buffer = {
+    inject: function(name, css, reinject) {
+      if (css === undefined && reinject === undefined)
+        name = djb2((css = name));
+      else if (typeof css == 'boolean' && reinject === undefined) {
+        reinject = css;
+        css = name;
       }
+      if (cssAPI.buffer[name] !== undefined && !reinject)
+        return;
+      
+      cssAPI.buffer[name] = css;
+    },
+    load: function(fileUrl, complete, reload) {
+      //dont reload
+      if (cssAPI.buffer[fileUrl] !== undefined && !reload)
+        return complete();
+      
+      var self = this;
       text.get(fileUrl, function(css) {
-        css = nomalize(css, fileUrl, baseUrl);
-        bufferAPI.inject(fileUrl, css);
+        var css = normalize(css, fileUrl, baseUrl);
+        self.inject(fileUrl, css, reload);
         complete();
       });
     },
-    clear: function() {
-      for (var k in bufferAPI.buffer)
-        delete bufferAPI.buffer[k];
+    clear: function(name) {
+      if (name)
+        delete cssAPI.buffer[name];
+      else
+        for (var o in cssAPI.buffer)
+          delete cssAPI.buffer[o];
     }
   };
   
-  var styleAPI = loaders.style = {
-    tracker: {},
-    inject: function(name, css) {
+  cssAPI.tracker = {};
+  
+  var definedCSS = module.config().definedCSS
+  if (definedCSS)
+    for (var i = 0; i < definedCSS.length; i++)
+      cssAPI.tracker[definedCSS[i]] = true;
+  
+  cssAPI.Style = {
+    inject: function(name, css, reinject) {
+      if (css === undefined && reinject === undefined)
+        name = djb2((css = name));
+      else if (typeof css == 'boolean' && reinject === undefined) {
+        reinject = css;
+        css = name;
+      }      
+      if (cssAPI.tracker[name] !== undefined && !reinject)
+        return;
       
       //create stylesheet if necessary
-      if (styleAPI.stylesheet === undefined) {
-        styleAPI.stylesheet = document.createElement('style');
-        styleAPI.stylesheet.type = 'text/css';
-        document.getElementsByTagName('head')[0].appendChild(styleAPI.stylesheet);
+      if (cssAPI.stylesheet === undefined) {
+        cssAPI.stylesheet = document.createElement('style');
+        cssAPI.stylesheet.type = 'text/css';
+        document.getElementsByTagName('head')[0].appendChild(cssAPI.stylesheet);
       }
       
-      var curCSS = styleAPI.stylesheet.styleSheet ? styleAPI.stylesheet.styleSheet.cssText : styleAPI.stylesheet.innerHTML;
+      var curCSS = cssAPI.stylesheet.styleSheet ? cssAPI.stylesheet.styleSheet.cssText : cssAPI.stylesheet.innerHTML;
       
-      if (styleAPI.tracker[name])
+      if (cssAPI.tracker[name] && cssAPI.tracker[name].startIndex)
         //if already there, only update existing
-        curCSS = curCSS.substr(0, styleAPI.tracker[name].startIndex - 1) + css + curCSS.substr(styleAPI.tracker[name].endIndex);
+        curCSS = curCSS.substr(0, cssAPI.tracker[name].startIndex) + css + curCSS.substr(cssAPI.tracker[name].endIndex);
       
       else {
         //add styles and track the name position
-        styleAPI.tracker[name] = {
+        cssAPI.tracker[name] = {
           startIndex: curCSS.length,
           endIndex: curCSS.length + css.length - 1
         };
@@ -87,120 +121,69 @@ define(['module', 'require', './normalize', './onload-support', 'text'], functio
         curCSS += css;
       }
       
-      if (styleAPI.stylesheet.styleSheet)
-        styleAPI.stylesheet.styleSheet.cssText = curCSS;
+      if (cssAPI.stylesheet.styleSheet)
+        cssAPI.stylesheet.styleSheet.cssText = curCSS;
       else
-        styleAPI.stylesheet.innerHTML = curCSS;      
+        cssAPI.stylesheet.innerHTML = curCSS;      
     },
-    load: function(fileUrl, complete) {
+    load: function(fileUrl, complete, reload) {
       //dont load if already loaded
-      if (styleAPI.tracker[fileUrl]) {
-        complete();
-        return;
-      }
+      if (cssAPI.tracker[fileUrl] !== undefined && !reload)
+        return complete();
+      
+      var self = this;
       text.get(fileUrl, function(css) {
-        css = nomalize(css, fileUrl, baseUrl);
-        styleAPI.inject(fileUrl, css);
+        css = normalize(css, fileUrl, baseUrl);
+        self.inject(fileUrl, css, reload);
         complete();
       });
     },
-    clear: function() {
-      for (var t in tracker)
-        delete tracker[t];
-      
-      if (styleAPI.stylesheet.styleSheet)
-        styleAPI.stylesheet.styleSheet.cssText = '';
-      else
-        styleAPI.stylesheet.innerHTML = '';
-    }
-  };
-  
-  var linkAPI = loaders.link = {
-    links: {},
-    load: function(fileUrl, complete) {
-      //dont load if already loaded or loading
-      if (linkAPI.links[fileUrl]) {
-        if (linkAPI.links[fileUrl].loaded)
-          complete();
-        else {
-          var onload = linkAPI.links[fileUrl].onload;
-          linkAPI.links[fileUrl].onload = function() {
-            complete();
-            onload();
-          }
+    clear: function(name) {
+      //nb may need to clear currently loading
+      if (name) {
+        if (cssAPI.tracker[name]) {
+          cssAPI.inject(name, '', true);
+          delete cssAPI.tracker[name];
         }
-        return;
       }
-      var link = document.createElement('link');
-      link.type = 'text/css';
-      link.rel = 'stylesheet';
-      link.href = fileUrl;
-      link.onload = function() {
-        link.loaded = true;
-        complete();
-      };
-      document.getElementsByTagName('head')[0].appendChild(link);
-      linkAPI.links[fileUrl] = link;
-    },
-    inject: function(name, css) {
-      styleAPI.inject(name, css);
-    },
-    clear: function() {
-      for (var l in linkAPI.links)
-        document.getElementsByTagName('head')[0].removeChild(linkAPI.links[l]);
+      else {
+        for (var t in cssAPI.tracker)
+          delete cssAPI.tracker[t];
+        
+        if (cssAPI.stylesheet.styleSheet)
+          cssAPI.stylesheet.styleSheet.cssText = '';
+        else
+          cssAPI.stylesheet.innerHTML = '';
+      }
     }
   };
   
-  var queueAPI = loaders.queue = {
-    queue: {
-      load: [],
-      inject: []
-    },
-    load: function(fileUrl, complete) {
-      queueAPI.queue.load.push([fileUrl, complete]);
-    },
-    inject: function(name, css) {
-      queueAPI.queue.inject.push([name, css]);
-    },
-    clear: function() {
-      queueAPI.queue.load = [];
-      queueAPI.queue.inject = [];
-    },
-    flush: function(loader) {
-      var loadQueue = queueAPI.queue.load;
-      var injectQueue = queueAPI.queue.inject;
-      for (var i = 0; i < loadQueue.length; i++)
-        loader.load(loadQueue[i][0], loadQueue[i][1]);
-      for (var i = 0; i < injectQueue.length; i++)
-        loader.inject(injectQueue[i][0], injectQueue[i][1]);
-    }
-  };
-  
-  cssAPI.loader = require.isBrowser ? module.config().loader : 'buffer';
-  
-  //no loader given in config - need to do feature detection
-  if (!loaders[cssAPI.loader]) {
-    onLoadSupport(function(supported) {
-      cssAPI.loader = supported ? 'link' : 'style';
-      queueAPI.flush(loaders[cssAPI.loader]);
-    });
-    //while support check is running, queue any requests
-    cssAPI.loader = 'queue';
+  if (module.config().loaderID) {
+    //dynamically load the moduleID loaderID to use as the loader
+    //mix in all the properties, and set the 'loaderName' property
+  }
+  else if (require.isBrowser)
+    cssAPI.loaderName = 'Style'
+  else {
+    //var bufferAPI = require('buffer'). extend(cssAPI, bufferAPI)
+    //loaderName set automatically as part of extend
+    //load the buffer API
+    cssAPI.loaderName = 'Buffer';
   }
   
   cssAPI.load = function(name, req, load, config) {
     if (name.substr(name.length - 5, 4) != '.css')
       name += '.css';
-    loaders[cssAPI.loader].load(req.toUrl(name), function() {
+    cssAPI[cssAPI.loaderName].load(req.toUrl(name), function() {
       load(cssAPI);
     });
-  };
-  cssAPI.clear = function() {
-    loaders[cssAPI.loader].clear();
-  };
-  cssAPI.inject = function(name, css) {
-    loaders[cssAPI.loader].inject(name, css);
-  };
+  }
+  cssAPI.clear = function(name) {
+    cssAPI[cssAPI.loaderName].clear(name);
+  }
+  cssAPI.inject = function(name, css, reinject) {
+    cssAPI[cssAPI.loaderName].inject(name, css, reinject);
+  }
   
   return cssAPI;
 });
