@@ -3,7 +3,7 @@
   dir: 'www-built',
   baseUrl: '.',
   fileExclusionRegExp: /(^example)|(.git)$/,
-  separateCSS: true,
+  //separateCSS: true,
   map: {
     '*': {
       css: 'require-css/css'

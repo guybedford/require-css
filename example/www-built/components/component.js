@@ -1,1 +1,1 @@
-require(["css!./component!"],function(){return{component:"is here"}})
+define(["css!./component!"],function(){return{component:"is here"}})

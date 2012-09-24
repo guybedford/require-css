@@ -1,3 +1,3 @@
-define(['css!./component'], function() {
+define(['css!./component!'], function() {
   return {component: 'is here'};
 });

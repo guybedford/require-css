@@ -5,8 +5,21 @@ define(['require', './normalize'], function(req, normalize) {
 
   cssAPI.buffer = {};
   
-  //todo: include compression with redundancy
   function compress(css) {
+    if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
+      try {
+        var csso = require.nodeRequire('csso');
+        var csslen = css.length;
+        css = csso.justDoIt(css);
+        console.log('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
+        return css;
+      }
+      catch(e) {
+        console.log('Compression module not installed. Use "npm install csso -g" to enable.');
+        return css;
+      }
+    }
+    console.log('Compression not supported outside of nodejs environments.');
     return css;
   }
   
@@ -102,17 +115,76 @@ define(['require', './normalize'], function(req, normalize) {
   
   //when adding to the link buffer, paths are normalised to the baseUrl
   //when removing from the link buffer, paths are normalised to the output file path
-  
   function escape(content) {
     return content.replace(/(["'\\])/g, '\\$1')
-        .replace(/[\f]/g, "\\f")
-        .replace(/[\b]/g, "\\b")
-        .replace(/[\n]/g, "\\n")
-        .replace(/[\t]/g, "\\t")
-        .replace(/[\r]/g, "\\r");
+      .replace(/[\f]/g, "\\f")
+      .replace(/[\b]/g, "\\b")
+      .replace(/[\n]/g, "\\n")
+      .replace(/[\t]/g, "\\t")
+      .replace(/[\r]/g, "\\r");
   }
   
-  cssAPI.stubs = [];
+  cssAPI.defined = {};
+  
+  //string hashing for naming css strings allowing for reinjection avoidance
+  //courtesy of http://erlycoder.com/49/javascript-hash-functions-to-convert-string-into-integer-hash-
+  var djb2 = function(str) {
+    var hash = 5381;
+    for (i = 0; i < str.length; i++)
+      hash = ((hash << 5) + hash) + str.charCodeAt(i); /* hash * 33 + c */
+    return hash;
+  }
+  
+  cssAPI.inject = function(cssId, css, reinject) {
+    if (css === undefined && reinject === undefined)
+      cssId = djb2((css = cssId));
+    else if (typeof css == 'boolean' && reinject === undefined) {
+      reinject = css;
+      css = cssId;
+    }
+    if (cssAPI.defined[cssId] !== undefined && !reinject)
+      return;
+    
+    cssAPI.defined[cssId] = css;
+    
+    return cssId;
+  }
+  
+  cssAPI.loadFile = function(cssId, complete, reload) {
+    complete = complete || function(){};
+    //nb despite the callback this version is synchronous to work with the write API
+    //dont reload
+    if (cssAPI.defined[cssId] !== undefined && !reload)
+      return complete(cssAPI);
+    
+    var fileUrl = cssId;
+    
+    if (fileUrl.substr(fileUrl.length - 1, 1) == '!')
+      fileUrl = fileUrl.substr(0, fileUrl.length - 1);
+    
+    if (fileUrl.substr(fileUrl.length - 4, 4) != '.css')
+      fileUrl += '.css';
+    
+    fileUrl = req.toUrl(fileUrl);
+    
+    //external URLS don't get added (just like JS requires)
+    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://')
+      return complete(cssAPI);
+    
+    //add to the buffer
+    var css = loadFile(fileUrl);
+    css = normalize(css, fileUrl, baseUrl);
+    cssAPI.inject(cssId, css);
+    complete(cssAPI);
+  }
+  
+  cssAPI.clear = function(cssId) {
+    if (cssId)
+      delete cssAPI.defined[cssId];
+    else
+      for (var o in cssAPI.defined)
+        delete cssAPI.defined[o];
+  }
   
   cssAPI.load = function(name, req, load, config) {
     //store config
@@ -121,74 +193,89 @@ define(['require', './normalize'], function(req, normalize) {
     load();
   }
   
+  cssAPI.normalize = function(name, normalize) {
+    if (name.substr(name.length - 1, 1) == '!')
+      return normalize(name.substr(0, name.length - 1)) + '!';
+    return normalize(name);
+  }
+  
+  //list of cssIds included in this layer
+  var layerBuffer = [];
+  
   cssAPI.write = function(pluginName, moduleName, write) {
-    if (moduleName.substr(0, 2) != '>>') {
-      
-      var fileName = moduleName;
-      
-      if (fileName.substr(fileName.length - 5, 4) != '.cs')
-        fileName += '.css';
-      
-      fileName = req.toUrl(fileName);
-      
-      //external URLS don't get added (just like JS)
-      if (fileName.substr(0, 7) == 'http://' || fileName.substr(0, 8) == 'https://')
-        return;
-      
-      //add to the buffer
-      var css = loadFile(fileName);
-      css = normalize(css, fileName, baseUrl);
-      cssAPI.inject(fileName, css);
-      
-      //write as a stub
-      cssAPI.stubs.push(pluginName + '!' + moduleName);
-      cssAPI.pluginName = cssAPI.pluginName || pluginName;
-    }
     
+    cssAPI.pluginName = cssAPI.pluginName || pluginName;
+    
+    if (moduleName.substr(0, 2) != '>>') {
+      //(sync load)
+      cssAPI.loadFile(moduleName);
+      
+      //ammend the layer buffer and write the module as a stub
+      layerBuffer.push(moduleName);
+      write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
+    }
     //buffer / write point
     else
       cssAPI.onLayerComplete(moduleName.substr(2), write);
   }
   
   cssAPI.onLayerComplete = function(name, write) {
-    //performs all writing
-    var path = (cssAPI.config.dir ? cssAPI.config.dir + name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css'));
     
+    //separateCSS parameter set either globally or as a layer setting
+    var separateCSS = false;
+    if (cssAPI.config.separateCSS)
+      separateCSS = true;
+    if (cssAPI.config.modules)
+      for (var i = 0; i < cssAPI.config.modules.length; i++)
+        if (typeof cssAPI.config.modules[i].separateCSS == 'boolean')
+          separateCSS = cssAPI.config.modules[i].separateCSS;
+    
+    //calculate layer css and index injection script
     var css = '';
-    for (var n in cssAPI.buffer)
-      css += cssAPI.buffer[n];
+    var index = '';
+    for (var i = 0; i < layerBuffer.length; i++) {
+      css += cssAPI.defined[layerBuffer[i]];
+      index += 'defined[\'' + layerBuffer[i] + '\'] = ';
+    }
     
-    var output = compress(normalize(css, baseUrl, path));
-    
-    if (output != '') {
+    if (separateCSS) {
       if (typeof console != 'undefined' && console.log)
         console.log('Writing CSS! file: ' + name + '\n');
       
+      //calculate the css output path for this layer
+      var path = cssAPI.config.dir ? cssAPI.config.dir + name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css');
+      var output = compress(normalize(css, baseUrl, path));
+      
       saveFile(path, output);
       
-      //check if we need to auto load the new built css file as a dependency, or if
-      //it will be included manually with a <link> tag.
-      var deps = [];
-      if (cssAPI.config.loadCSS !== false) {
-        var outputName = normalize.convertURIBase(path.substr(1), '/', baseUrl);
-        outputName = outputName.substr(0, outputName.length - 4);
-        deps.push(cssAPI.pluginName + '!' + outputName);
-      }
-      
-      //write out all the stubs, including a dependency on the build css file if specified
-      for (var i = 0; i < cssAPI.stubs.length; i++)
-        write('define(\'' + cssAPI.stubs[i] + '\', ' + JSON.stringify(deps) + ', function(){});');
-      
-      cssAPI.clear();
-      cssAPI.stubs = [];
+      //write the layer index into the layer
+      write('require([\'' + cssAPI.pluginName + '\'], function(css) { \n'
+        + 'var defined = css.defined; \n'
+        + index + 'true; \n'
+        + '});');
     }
-  }
-  
-  cssAPI.inject = function(name, css) {
-    cssAPI.buffer[name] = css;
-  }
-  cssAPI.clear = function() {
-    cssAPI.buffer = {};
+    else {
+      if (css == '')
+        return;
+      //write the injection and layer index into the layer
+      
+      //prepare the css
+      css = escape(compress(css));
+      
+      //derive the absolute path for the normalize helper
+      var normalizeParts = cssAPI.pluginName.split('/');
+      normalizeParts[normalizeParts.length - 1] = 'normalize';
+      var normalizeName = normalizeParts.join('/');
+      
+      write('require([\'' + cssAPI.pluginName + '\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
+        + 'var defined = css.defined; \n'
+        + index + 'true; \n'
+        + 'css.inject(normalize(\'' + css + '\', \'/\', require.toUrl(\'.\').substr(1))); \n'
+        + '});');
+    }
+    
+    //clear layer buffer for next layer
+    layerBuffer = [];
   }
   
   return cssAPI;

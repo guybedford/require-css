@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<script type='text/javascript' src='../../../require.js'></script>
+<script>
+  require.config({
+    baseUrl: '.',
+    map: {
+      '*': {
+        'css': 'require-css/css'
+      } 
+    }
+  });
+</script>
+
+<script>
+  require(['app'], function(app) {
+  });
+</script>
+
+<body>
+<h1>test</h1>
+</body>
