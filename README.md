@@ -167,7 +167,7 @@ define(function() {
 });
 ```
 
-Separate build layers can then be made for mobile specific use. Read more at the [Require-IS](https://github.com/guybedford/is) project page.
+Separate build layers can then be made for mobile specific use. Read more at the [Require-IS](https://github.com/guybedford/require-is) project page.
 
 
 Roadmap
