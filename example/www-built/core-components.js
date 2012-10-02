@@ -1,1 +1,0 @@
-define("require-css/css!components/component!",[],function(){}),define("components/component",["css!./component!"],function(){return{component:"is here"}}),require(["require-css/css","require-css/normalize","require"],function(e,t,n){var r=e.defined;r["components/component!"]=!0,e.inject(t("body{background-image:url(test.jpg);background-color:red}","/",n.toUrl(".").substr(1)))})

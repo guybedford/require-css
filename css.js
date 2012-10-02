@@ -2,27 +2,21 @@
  * css! loader plugin
  * Allows for loading stylesheets with the 'css!' syntax.
  *
- * css.inject(css)
- * css.inject(cssId, css)
- * css.inject(cssId, css, rewrite)
- * css.loadFile(cssId, complete)
- * css.loadFile(cssId, fileUrl, complete)
- * css.loadFile(cssId, fileUrl, complete, reload)
- * css.clear(cssId)
- * css.clear()
- * 
+ * External stylesheets supported.
+ *
+ * API:
+ * css.set(cssId, css)
+ * (disabled) css.set(css) (returns an id that can be used with clear)
+ * (disabled) css.clear(cssId)
+ * (disabled) css.clear()
  * 
  * '!' suffix skips load checking
  *
  */
-define(['module', 'require', './normalize', 'text'], function(module, require, normalize, text) {
+define(['require', './normalize', 'text'], function(require, normalize, text) {
   
-  if (!require.isBrowser)
-    return {
-      load: function(name, req, load, config) {
-        load();
-      }
-    };
+  if (typeof window == 'undefined')
+    return null;
   
   var baseUrl = require.toUrl('.');
   var head = document.getElementsByTagName('head')[0];
@@ -30,56 +24,52 @@ define(['module', 'require', './normalize', 'text'], function(module, require, n
   //main api object
   var cssAPI = {};
   
-  cssAPI.pluginBuilder = './css.pluginBuilder';
+  cssAPI.pluginBuilder = './css-builder';
   
   //used to track all css injections
   cssAPI.defined = {};
+  //track loads to allow for cancelling
+  //cssAPI.loading = {};
+  //link tags used for external stylesheets
+  cssAPI.links = {};
   
   //<style> tag creation, setters and getters
   var stylesheet;
-  var style = {
-    create: function() {
-      //create stylesheet if necessary
-      if (stylesheet === undefined) {
-        stylesheet = document.createElement('style');
-        stylesheet.type = 'text/css';
-        head.appendChild(stylesheet);
-      }
-    },
-    set: function(css) {
-      this.create();
-      if (stylesheet.styleSheet)
-        stylesheet.styleSheet.cssText = css;
-      else
-        stylesheet.innerHTML = css;
-    },
-    get: function() {
-      this.create();
-      return stylesheet.styleSheet ? stylesheet.styleSheet.cssText : stylesheet.innerHTML;
+  var createStyle = function() {
+    //create stylesheet if necessary
+    if (stylesheet === undefined) {
+      stylesheet = document.createElement('style');
+      stylesheet.type = 'text/css';
+      head.appendChild(stylesheet);
     }
-  };
+  }
+  var setStyle = function(css) {
+    createStyle();
+    if (stylesheet.styleSheet)
+      stylesheet.styleSheet.cssText = css;
+    else
+      stylesheet.innerHTML = css;
+  }
+  var getStyle = function() {
+    createStyle();
+    return stylesheet.styleSheet ? stylesheet.styleSheet.cssText : stylesheet.innerHTML;
+  }
   
   //string hashing for naming css strings allowing for reinjection avoidance
   //courtesy of http://erlycoder.com/49/javascript-hash-functions-to-convert-string-into-integer-hash-
-  var djb2 = function(str) {
+  /* var djb2 = function(str) {
     var hash = 5381;
     for (i = 0; i < str.length; i++)
-      hash = ((hash << 5) + hash) + str.charCodeAt(i); /* hash * 33 + c */
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
     return hash;
-  }
+  } */
   
   //public API methods
-  cssAPI.inject = function(cssId, css, reinject) {
-    if (css === undefined && reinject === undefined)
-      cssId = djb2((css = cssId));
-    else if (typeof css == 'boolean' && reinject === undefined) {
-      reinject = css;
-      css = cssId;
-    }      
-    if (cssAPI.defined[cssId] !== undefined && !reinject)
-      return;
+  cssAPI.set = function(cssId, css) {
+    /* if (css === undefined)
+      cssId = djb2((css = cssId)); */
     
-    var curCSS = style.get();
+    var curCSS = getStyle();
     
     var def;
     if ((def = cssAPI.defined[cssId]) && typeof def.index == 'number')
@@ -96,88 +86,48 @@ define(['module', 'require', './normalize', 'text'], function(module, require, n
       curCSS += css;
     }
     
-    style.set(curCSS);
+    setStyle(curCSS);
       
     return cssId;
   }
   
-  cssAPI.get = function(cssId) {
-    var curCSS = style.get();
+  //useful for debugging to see the css by cssId
+  /* cssAPI.get = function(cssId) {
+    var curCSS = getStyle();
     
     if (!cssId)
       return curCSS;
     
     var def;
-    if (!(def = cssAPI.defined[cssId]))
-      return null;
-    
-    if (typeof cssAPI.defined[cssId].index == 'number')
+    //if already there, so we can get
+    if ((def = cssAPI.defined[cssId]) && typeof def.index == 'number')
       return curCSS.substr(def.index, def.length);
     else
-      return true;
-  }
+      return null;
+  } */
   
-  //takes a cssId - the equivalent of a moduleId for locating css files relative to the baseUrl
-  cssAPI.loadFile = function(cssId, complete, reload) {
-    complete = complete || function(){};
-    //dont load if already loaded
-    if (cssAPI.defined[cssId] !== undefined && !reload)
-      return complete(cssAPI);
-    
-    var fileUrl = cssId;
-      
-    var skipLoad = false;
-    if (fileUrl.substr(fileUrl.length - 1, 1) == '!') {
-      fileUrl = fileUrl.substr(0, fileUrl.length - 1);
-      skipLoad = true;
-    }
-    
-    if (fileUrl.substr(fileUrl.length - 4, 4) != '.css')
-      fileUrl += '.css';
-    
-    fileUrl = require.toUrl(fileUrl);
-    
-    //external url -> add as a <link> tag to load. onload support not reliable so not provided
-    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://') {
-      if (skipLoad != true)
-        throw 'External URLs only loaded without onload support. You must add the "!" suffix to indicate this.';
-      var link = document.createElement('link');
-      link.type = 'text/css';
-      link.rel = 'stylesheet';
-      link.href = fileUrl;
-      head.appendChild(link);
-      
-      //only instant callback due to onload not being reliable
-      cssAPI.defined[cssId] = true;
-      complete(cssAPI);
-    }
-    //internal url -> download and inject into <style> tag
-    else {
-      text.get(fileUrl, function(css) {
-        css = normalize(css, fileUrl, baseUrl);
-        cssAPI.inject(cssId, css, reload);
-        if (!skipLoad)
-          complete(cssAPI);
-      });
-      if (skipLoad)
-        complete(cssAPI);
-    }
-  }
-  cssAPI.clear = function(cssId) {
-    //nb may need to clear currently loading
+  /* cssAPI.clear = function(cssId) {
     if (cssId) {
       if (cssAPI.defined[cssId]) {
-        cssAPI.inject(cssId, '', true);
+        cssAPI.set(cssId, '');
         delete cssAPI.defined[cssId];
+      }
+      if (cssAPI.loading[cssId])
+        delete cssAPI.loading[cssId];
+      if (cssAPI.links[cssId]) {
+        head.removeChild(cssAPI.links[cssId]);
+        delete cssAPI.links[cssId];
       }
     }
     else {
-      for (var t in cssAPI.defined)
-        delete cssAPI.defined[t];
-      
-      style.set('');
+      for (var l in cssAPI.links[cssId])
+        head.removeChild(cssAPI.links[l]);
+      setStyle('');
+      cssAPI.loading = {};
+      cssAPI.defined = {};
+      cssAPI.links = {};
     }
-  }
+  } */
   
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 1, 1) == '!')
@@ -185,8 +135,52 @@ define(['module', 'require', './normalize', 'text'], function(module, require, n
     return normalize(name);
   }
   
-  cssAPI.load = function(name, req, load, config) {
-    cssAPI.loadFile(name, load);
+  cssAPI.load = function(cssId, req, load, config, parse) {
+    var skipLoad = false;
+    if (cssId.substr(cssId.length - 1, 1) == '!') {
+      cssId = cssId.substr(0, cssId.length - 1);
+      skipLoad = true;
+    }
+    
+    var fileUrl = cssId;
+    
+    if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
+      fileUrl += '.css';
+    
+    fileUrl = req.toUrl(fileUrl);
+    
+    //external url -> add as a <link> tag to load. onload support not reliable so not provided
+    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://') {
+      if (parse)
+        throw 'Cannot preprocess external css.';
+      var link = document.createElement('link');
+      link.type = 'text/css';
+      link.rel = 'stylesheet';
+      link.href = fileUrl;
+      head.appendChild(link);
+      
+      //only instant callback due to onload not being reliable
+      cssAPI.links[cssId] = link;
+      load(cssAPI);
+    }
+    //internal url -> download and inject into <style> tag
+    else {
+      //cssAPI.loading[cssId] = true;
+      text.get(fileUrl, function(css) {
+        //if (!cssAPI.loading[cssId]) //if load is cancelled, ignore
+        //  return;
+        
+        if (parse)
+          css = parse(css);
+        css = normalize(css, fileUrl, baseUrl);
+        cssAPI.set(cssId, css);
+          
+        if (!skipLoad)
+          load(cssAPI);
+      });
+      if (skipLoad)
+        load(cssAPI);
+    }
   }
   
   return cssAPI;

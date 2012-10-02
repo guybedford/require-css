@@ -1,1 +1,0 @@
-define("require-css/css!style/style",[],function(){}),require(["css!style/style","components/component"],function(e){return"uses the component!"}),define("app",function(){}),require(["require-css/css","require-css/normalize","require"],function(e,t,n){var r=e.defined;r["style/style"]=!0,e.inject(t("body{font-family:sans-serif}","/",n.toUrl(".").substr(1)))})
