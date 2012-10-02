@@ -17,14 +17,14 @@ define(['css!styles/main'], function() {
 ```
 
 ### CSS Requiring
-* *CSS requiring* CSS is downloaded and injected into the page. Url path normalization of assets within the CSS file is managed.
-* *Fully compatible load callback* The plugin call is loaded once the CSS is downloaded and injected. This method works across all browsers and devices. It bypasses the `onload` support issues that make this a tricky problem otherwise (http://requirejs.org/docs/faq-advanced.html#css).
-* *Cross-domain CSS* Cross-domain CSS is loaded with the use of a `<link>` tag, but build and onload support are not provided for these - the callback fires instantly.
+* **CSS requiring** CSS is downloaded and injected into the page. Url path normalization of assets within the CSS file is managed.
+* **Fully compatible load callback** The plugin call is loaded once the CSS is downloaded and injected. This method works across all browsers and devices. It bypasses the `onload` support issues that make this a tricky problem otherwise (http://requirejs.org/docs/faq-advanced.html#css).
+* **Cross-domain CSS** Cross-domain CSS is loaded with the use of a `<link>` tag, but build and onload support are not provided for these - the callback fires instantly.
 
 ### CSS Building
-* *CSS builds* When run as part of a build with the RequireJS optimizer, `css!` dependencies are automatically inlined into the built layer within the JavaScript, fully compatible with layering. CSS injection is performed as soon as the layer is loaded.
-* *Option to build separate layer CSS files* A `separateCSS` build parameter allows for built layers to output their css files separately, instead of inline with the JavaScript, for manual inclusion.
-* *CSS compression* CSS redundancy compression is easily supported through the external library, [csso](https://github.com/css/csso).
+* **CSS builds** When run as part of a build with the RequireJS optimizer, `css!` dependencies are automatically inlined into the built layer within the JavaScript, fully compatible with layering. CSS injection is performed as soon as the layer is loaded.
+* **Option to build separate layer CSS files** A `separateCSS` build parameter allows for built layers to output their css files separately, instead of inline with the JavaScript, for manual inclusion.
+* **CSS compression** CSS redundancy compression is supported through the external library, [csso](https://github.com/css/csso).
 
 Installation and Setup
 ----------------------
@@ -52,9 +52,11 @@ Use Cases and Benefits
 
 ### Motivation
 
-The use case for RequireCSS came out of a need to manage templates and their CSS together. When writing a large dynamic application, with templates being rendered on the client-side, it makes more sense to inject the CSS as needed as part of rendering the template than having server-side CSS management or one large file. When building, templates and CSS can be bundled together into [separate layers](http://requirejs.org/docs/1.0/docs/faq-optimization.html#priority) to allow much more fine grained control over loading than is typical.
+The use case for RequireCSS came out of a need to manage templates and their CSS together. When writing a large dynamic application, with templates being rendered on the client-side, it can be beneficial to inject the CSS as templates are required instead of dumping all the CSS together separately. The added benefit of this is then being able to build the CSS naturally with the RequireJS optimizer, which also supports [separate build layers](http://requirejs.org/docs/1.0/docs/faq-optimization.html#priority) as needed.
 
 ### Script-inlined CSS Benefits
+
+By default, during the build CSS is compressed and inlined as a string within the layer that injects the CSS when run.
 
 If the layer is included as a `<script>` tag, only one browser request is needed instead of many separate CSS requests with `<link>` tags.
 
@@ -70,7 +72,8 @@ In a typical use case, one doesn't mind if the assets have completed downloading
 
 CSS parsing speeds are quick enough that a dynamic injection will in most cases be instantanous. Thus, there is no real disadvantage to the method used here.
 
-CSS content is downloaded as text with the text plugin, injected into a `<style>` tag, and the load callback is run immediately after injection. Typically this would be followed by a rendering stage, and this hasn't resulted in any content flashes in tests so far across devices.
+CSS content is downloaded as text with the text plugin, injected into a `<style>` tag, and the load callback is run immediately after injection. Typically this would be followed by a rendering stage, and this hasn't resulted in any content flashes whatsoever in tests so far across devices.
+
 
 
 Optimizer Configuration
@@ -85,7 +88,7 @@ Optimizer configuration:
   modules: [
   {
     name: 'mymodule',
-    include: ['css!>>']
+    include: ['css!>>mymodule']
   }
   ]
 }
@@ -122,15 +125,8 @@ To output the CSS to a separate file, use the configuration:
 }
 ```
 
-This will then output all the css to the file `mymodule.css`.
+This will then output all the css to the file `mymodule.css`. This configuration can also be placed on the module object itself for layer-specific settings.
 
-*To exclude certain CSS from being output as separate files, use the inclusion syntax:*
-
-```javascript
-require(['css!mycss!'], ...);
-```
-
-*The suffix `!` will ensure that the CSS is never output to a file and always inlined dynamically in the js.*
 
 
 CSS Compression
@@ -145,6 +141,7 @@ To enable the CSS compression, install csso with npm:
 ```
 
 The build log will display the compression results.
+
 
 Conditional CSS
 ---
@@ -175,6 +172,6 @@ Separate build layers can then be made for mobile specific use. Read more at the
 
 Roadmap
 -------
-* ~Comprehensive CSS minification including style reduction~
-* ~LESS extension~
+* ~~Comprehensive CSS minification including style reduction~~
+* ~~LESS extension~~
 * Sprite compilation
