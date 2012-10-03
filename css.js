@@ -141,6 +141,8 @@ define(['require', './normalize', 'text'], function(require, normalize, text) {
       cssId = cssId.substr(0, cssId.length - 1);
       skipLoad = true;
     }
+    if (cssAPI.defined[cssId])
+      return load(cssAPI);
     
     var fileUrl = cssId;
     
