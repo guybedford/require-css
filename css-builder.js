@@ -193,26 +193,20 @@ define(['require', './normalize'], function(req, normalize) {
   cssAPI._layerBuffer = [];
   
   cssAPI.write = function(pluginName, moduleName, write, parse) {
-    if (moduleName.substr(0, 2) != '>>') {
-      //external URLS don't get added (just like JS requires)
-      if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
-        return;
-      
-      if (moduleName.substr(moduleName.length - 1, 1) == '!')
-        moduleName = moduleName.substr(0, moduleName.length - 1);
-      
-      //(sync load)
-      this.loadFile(moduleName, parse);
-      
-      //ammend the layer buffer and write the module as a stub
-      this._layerBuffer.push(moduleName);
-      
-      write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
-    }
-    //buffer / write point
-    else {
-      this.onLayerComplete(moduleName.substr(2), write);
-    }
+    //external URLS don't get added (just like JS requires)
+    if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
+      return;
+    
+    if (moduleName.substr(moduleName.length - 1, 1) == '!')
+      moduleName = moduleName.substr(0, moduleName.length - 1);
+    
+    //(sync load)
+    this.loadFile(moduleName, parse);
+    
+    //ammend the layer buffer and write the module as a stub
+    this._layerBuffer.push(moduleName);
+    
+    write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
   }
   
   //string hashing used to name css that doesnt have an id (which is the case for builds)
@@ -224,7 +218,7 @@ define(['require', './normalize'], function(req, normalize) {
     return hash;
   }
   
-  cssAPI.onLayerComplete = function(name, write) {
+  cssAPI.onLayerEnd = function(write, data) {
     //separateCSS parameter set either globally or as a layer setting
     var separateCSS = false;
     if (this.config.separateCSS)
@@ -244,10 +238,10 @@ define(['require', './normalize'], function(req, normalize) {
     
     if (separateCSS) {
       if (typeof console != 'undefined' && console.log)
-        console.log('Writing CSS! file: ' + name + '\n');
+        console.log('Writing CSS! file: ' + data.name + '\n');
       
       //calculate the css output path for this layer
-      var path = this.config.dir ? this.config.dir + name + '.css' : this.config.out.replace(/\.js$/, '.css');
+      var path = this.config.dir ? this.config.dir + data.name + '.css' : this.config.out.replace(/\.js$/, '.css');
       var output = compress(normalize(css, baseUrl, path));
       
       saveFile(path, output);
