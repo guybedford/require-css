@@ -35,8 +35,6 @@ Download the require-css folder manually or use [volo](https://github.com/volojs
 volo add guybedford/require-css
 ```
 
-Volo will automatically install the text plugin, which is a needed dependency. For a manual install, [download it here](https://raw.github.com/requirejs/text/latest/text.js) and copy it into the baseUrl folder.
-
 For ease of use add the following [map configuration](http://requirejs.org/docs/api.html#config-map) in RequireJS:
 
 ```javascript
@@ -72,7 +70,7 @@ In a typical use case, one doesn't mind if the assets have completed downloading
 
 CSS parsing speeds are quick enough that a dynamic injection will in most cases be instantanous. Thus, there is no real disadvantage to the method used here.
 
-CSS content is downloaded as text with the text plugin, injected into a `<style>` tag, and the load callback is run immediately after injection. Typically this would be followed by a rendering stage, and this hasn't resulted in any content flashes whatsoever in tests so far across devices.
+CSS content is downloaded as text, injected into a `<style>` tag, and the load callback is run immediately after injection. Typically this would be followed by a rendering stage, and this hasn't resulted in any content flashes whatsoever in tests so far across devices.
 
 
 

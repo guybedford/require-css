@@ -1,9 +1,5 @@
 {
-  "main": "css",
   "volo": {
     "type": "directory",
-    "dependencies": {
-      "text": "github:requirejs/text/2.0.1"
-    }
   }
 }
