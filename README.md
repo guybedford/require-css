@@ -87,14 +87,13 @@ Optimizer configuration:
 {
   modules: [
   {
-    name: 'mymodule',
-    include: ['css!>>mymodule']
+    name: 'mymodule'
   }
   ]
 }
 ```
 
-*Note: the use of the include, `'css!>>'`, is necessary pending r.js pull request #241 (https://github.com/jrburke/r.js/pull/241).*
+**Note: the use of the include, `'css!>>'`, is necessary pending r.js pull request #241 (https://github.com/jrburke/r.js/pull/241).**
 
 If the contents of 'mymodule' are:
 
@@ -118,8 +117,7 @@ To output the CSS to a separate file, use the configuration:
   separateCSS: true,
   modules: [
   {
-    name: 'mymodule',
-    include: ['css!>>mymodule']
+    name: 'mymodule'
   }
   ]
 }
@@ -127,6 +125,9 @@ To output the CSS to a separate file, use the configuration:
 
 This will then output all the css to the file `mymodule.css`. This configuration can also be placed on the module object itself for layer-specific settings.
 
+Optimization is fully compatible with exclude and include.
+
+**Note: Optimization will only work when using r.js version 2.1.0 or later (released Oct 4 2012)**
 
 
 CSS Compression
