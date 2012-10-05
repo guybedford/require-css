@@ -94,7 +94,7 @@ Optimizer configuration:
 If the contents of 'mymodule' are:
 
 ```javascript
-  require(['css!style', 'css!page'], function(css) {
+  define(['css!style', 'css!page'], function(css) {
     //...
   });
 ```
