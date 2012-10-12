@@ -175,40 +175,43 @@ define(['require', './normalize'], function(req, normalize) {
       for (var o in cssAPI.defined)
         delete cssAPI.defined[o];
   } */
-  
+
   cssAPI.load = function(name, req, load, config) {
     //store config
     this.config = this.config || config;
     //just return - 'write' calls are made after exclusions so we run loading there
     load();
   }
-  
+
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 1, 1) == '!')
       return normalize(name.substr(0, name.length - 1)) + '!';
     return normalize(name);
   }
-  
+
   //list of cssIds included in this layer
   cssAPI._layerBuffer = [];
-  
+
   cssAPI.write = function(pluginName, moduleName, write, parse) {
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
-    
+
     if (moduleName.substr(moduleName.length - 1, 1) == '!')
       moduleName = moduleName.substr(0, moduleName.length - 1);
-    
+
     //(sync load)
     this.loadFile(moduleName, parse);
-    
+
     //ammend the layer buffer and write the module as a stub
     this._layerBuffer.push(moduleName);
-    
+
+    // Skip module definition in order to load the CSS from separate file
+/*
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
+*/
   }
-  
+
   //string hashing used to name css that doesnt have an id (which is the case for builds)
   //courtesy of http://erlycoder.com/49/javascript-hash-functions-to-convert-string-into-integer-hash-
   var djb2 = function(str) {
@@ -235,17 +238,22 @@ define(['require', './normalize'], function(req, normalize) {
       css += this.defined[this._layerBuffer[i]];
       index += 'defined[\'' + this._layerBuffer[i] + '\'] = ';
     }
-    
+
     if (separateCSS) {
       if (typeof console != 'undefined' && console.log)
         console.log('Writing CSS! file: ' + data.name + '\n');
-      
+
       //calculate the css output path for this layer
+/*
       var path = this.config.dir ? this.config.dir + data.name + '.css' : this.config.out.replace(/\.js$/, '.css');
+*/
+      // Path works with modules defined in the build options
+      var path = this.config.baseUrl ? this.config.baseUrl + data.name + '.css' : this.config.out.replace(/\.js$/, '.css');
+
       var output = compress(normalize(css, baseUrl, path));
-      
+
       saveFile(path, output);
-      
+
       //write the layer index into the layer
       write('require([\'css\'], function(css) { \n'
         + 'var defined = css.defined; \n'
