@@ -171,7 +171,7 @@ define(['require', './normalize'], function(req, normalize) {
       css = parse(css);
     
     css = normalize(css, fileUrl, baseUrl);
-    this.set(cssId, css);
+    this.set(cssId + (parseExtension ? '.' + parseExtension : ''), css);
   }
   
   /* cssAPI.clear = function(cssId) {
@@ -210,7 +210,7 @@ define(['require', './normalize'], function(req, normalize) {
     this.loadFile(moduleName, parse, parseExtension);
     
     //ammend the layer buffer and write the module as a stub
-    this._layerBuffer.push(moduleName);
+    this._layerBuffer.push(moduleName + (parseExtension ? '.' + parseExtension : ''));
     
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
   }
