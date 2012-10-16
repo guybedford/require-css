@@ -140,7 +140,7 @@ define(['require', './normalize'], function(req, normalize) {
     return cssId;
   }
   
-  cssAPI.loadFile = function(cssId, parse) {
+  cssAPI.loadFile = function(cssId, parse, parseExtension) {
     //nb despite the callback this version is synchronous to work with the write API
     //dont reload
     if (this.defined[cssId] !== undefined)
@@ -154,6 +154,11 @@ define(['require', './normalize'], function(req, normalize) {
     if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
       fileUrl += '.css';
     
+    if (parseExtension) {
+      if (fileUrl.substr(fileUrl.length - parseExtension.length - 1, parseExtension.length) != '.' + parseExtension)
+        fileUrl += '.' + parseExtension;
+    }
+    
     fileUrl = req.toUrl(fileUrl);
     
     //external URLS don't get added (just like JS requires)
@@ -164,6 +169,7 @@ define(['require', './normalize'], function(req, normalize) {
     var css = loadFile(fileUrl);
     if (parse)
       css = parse(css);
+    
     css = normalize(css, fileUrl, baseUrl);
     this.set(cssId, css);
   }
@@ -192,7 +198,7 @@ define(['require', './normalize'], function(req, normalize) {
   //list of cssIds included in this layer
   cssAPI._layerBuffer = [];
   
-  cssAPI.write = function(pluginName, moduleName, write, parse) {
+  cssAPI.write = function(pluginName, moduleName, write, parse, parseExtension) {
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
@@ -201,7 +207,7 @@ define(['require', './normalize'], function(req, normalize) {
       moduleName = moduleName.substr(0, moduleName.length - 1);
     
     //(sync load)
-    this.loadFile(moduleName, parse);
+    this.loadFile(moduleName, parse, parseExtension);
     
     //ammend the layer buffer and write the module as a stub
     this._layerBuffer.push(moduleName);
