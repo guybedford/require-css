@@ -18,7 +18,6 @@
     name: 'core-components',
     create: true,
     include: ['components/component'], 
-    exclude: ['css']
   }
   ]
   //name: 'app.js',

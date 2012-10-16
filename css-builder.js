@@ -237,11 +237,11 @@ define(['require', './normalize'], function(req, normalize) {
     }
     
     if (separateCSS) {
+      var path = this.config.dir ? this.config.dir + data.name + '.css' : this.config.out.replace(/\.js$/, '.css');
       if (typeof console != 'undefined' && console.log)
-        console.log('Writing CSS! file: ' + data.name + '\n');
+        console.log('Writing CSS! file: ' + path + '\n');
       
       //calculate the css output path for this layer
-      var path = this.config.dir ? this.config.dir + data.name + '.css' : this.config.out.replace(/\.js$/, '.css');
       var output = compress(normalize(css, baseUrl, path));
       
       saveFile(path, output);
@@ -264,13 +264,19 @@ define(['require', './normalize'], function(req, normalize) {
       normalizeParts[normalizeParts.length - 1] = 'normalize';
       var normalizeName = normalizeParts.join('/');
       
-      write('require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
+      write(
+          'for (var c in requirejs.s.contexts) {'
+        + '  requirejs.s.contexts[c].nextTick = function(f){f();}}'
+        + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
         + 'var defined = css.defined; \n'
         + 'var baseUrl = require.toUrl(\'.\'); \n'
         + 'baseUrl = baseUrl.substr(0, 1) == \'.\' ? baseUrl.substr(1) : baseUrl; \n'
         + index + 'true; \n'
         + 'css.set(\'' + djb2(css) + '\', normalize(\'' + css + '\', \'/\', baseUrl)); \n'
-        + '});');
+        + '});'
+        + 'for (var c in requirejs.s.contexts){'
+        + '  requirejs.s.contexts[c].nextTick = requirejs.nextTick;}'
+      );
     }
     
     //clear layer buffer for next layer
