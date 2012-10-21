@@ -3,12 +3,6 @@
  * Allows for loading stylesheets with the 'css!' syntax.
  *
  * External stylesheets supported.
- *
- * API:
- * css.set(cssId, css)
- * (disabled) css.set(css) (returns an id that can be used with clear)
- * (disabled) css.clear(cssId)
- * (disabled) css.clear()
  * 
  * '!' suffix skips load checking
  *
@@ -70,123 +64,36 @@ define(['require', './normalize'], function(require, normalize) {
   
   cssAPI.pluginBuilder = './css-builder';
   
-  //used to track all css injections
-  cssAPI.defined = {};
-  //track loads to allow for cancelling
-  //cssAPI.loading = {};
-  //link tags used for external stylesheets
-  cssAPI.links = {};
+  //<style> tag creation
+  var stylesheet = document.createElement('style');
+  stylesheet.type = 'text/css';
+  head.appendChild(stylesheet);
   
-  //<style> tag creation, setters and getters
-  var stylesheet;
-  var createStyle = function() {
-    //create stylesheet if necessary
-    if (stylesheet === undefined) {
-      stylesheet = document.createElement('style');
-      stylesheet.type = 'text/css';
-      head.appendChild(stylesheet);
+  cssAPI.inject;
+  if (stylesheet.styleSheet)
+    cssAPI.inject = function(css) {
+      stylesheet.styleSheet.cssText += css;
     }
-  }
-  var setStyle = function(css) {
-    createStyle();
-    if (stylesheet.styleSheet)
-      stylesheet.styleSheet.cssText = css;
-    else
-      stylesheet.innerHTML = css;
-  }
-  var getStyle = function() {
-    createStyle();
-    return stylesheet.styleSheet ? stylesheet.styleSheet.cssText : stylesheet.innerHTML;
-  }
-  
-  //string hashing for naming css strings allowing for reinjection avoidance
-  //courtesy of http://erlycoder.com/49/javascript-hash-functions-to-convert-string-into-integer-hash-
-  /* var djb2 = function(str) {
-    var hash = 5381;
-    for (i = 0; i < str.length; i++)
-      hash = ((hash << 5) + hash) + str.charCodeAt(i);
-    return hash;
-  } */
-  
-  //public API methods
-  cssAPI.set = function(cssId, css) {
-    /* if (css === undefined)
-      cssId = djb2((css = cssId)); */
-    
-    var curCSS = getStyle();
-    
-    var def;
-    if ((def = cssAPI.defined[cssId]) && typeof def.index == 'number')
-      //if already there, only update existing
-      curCSS = curCSS.substr(0, def.index) + css + curCSS.substr(def.index + def.length);
-    
-    else {
-      //add styles and track the name position
-      cssAPI.defined[cssId] = {
-        index: curCSS.length,
-        length: css.length
-      };
-      
-      curCSS += css;
+  else
+    cssAPI.inject = function(css) {
+      stylesheet.innerHTML += css;
     }
-    
-    setStyle(curCSS);
-      
-    return cssId;
-  }
   
-  //useful for debugging to see the css by cssId
-  /* cssAPI.get = function(cssId) {
-    var curCSS = getStyle();
-    
-    if (!cssId)
-      return curCSS;
-    
-    var def;
-    //if already there, so we can get
-    if ((def = cssAPI.defined[cssId]) && typeof def.index == 'number')
-      return curCSS.substr(def.index, def.length);
-    else
-      return null;
-  } */
-  
-  /* cssAPI.clear = function(cssId) {
-    if (cssId) {
-      if (cssAPI.defined[cssId]) {
-        cssAPI.set(cssId, '');
-        delete cssAPI.defined[cssId];
-      }
-      if (cssAPI.loading[cssId])
-        delete cssAPI.loading[cssId];
-      if (cssAPI.links[cssId]) {
-        head.removeChild(cssAPI.links[cssId]);
-        delete cssAPI.links[cssId];
-      }
-    }
-    else {
-      for (var l in cssAPI.links[cssId])
-        head.removeChild(cssAPI.links[l]);
-      setStyle('');
-      cssAPI.loading = {};
-      cssAPI.defined = {};
-      cssAPI.links = {};
-    }
-  } */
-  
+  var instantCallbacks = {};
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 1, 1) == '!')
-      return normalize(name.substr(0, name.length - 1)) + '!';
+      instantCallbacks[name] = true;
+    if (instantCallbacks[name])
+      name = name.substr(0, name.length - 1);
+    if (name.substr(name.length - 4, 4) == '.css')
+      name = name.substr(0, name.length - 4);
     return normalize(name);
   }
   
   cssAPI.load = function(cssId, req, load, config, parse) {
-    var skipLoad = false;
-    if (cssId.substr(cssId.length - 1, 1) == '!') {
-      cssId = cssId.substr(0, cssId.length - 1);
-      skipLoad = true;
-    }
-    if (cssAPI.defined[cssId])
-      return load(cssAPI);
+    var instantCallback = instantCallbacks[cssId];
+    if (instantCallback)
+      delete instantCallbacks[cssId];
     
     var fileUrl = cssId;
     
@@ -206,25 +113,21 @@ define(['require', './normalize'], function(require, normalize) {
       head.appendChild(link);
       
       //only instant callback due to onload not being reliable
-      cssAPI.links[cssId] = link;
       load(cssAPI);
     }
     //internal url -> download and inject into <style> tag
     else {
-      //cssAPI.loading[cssId] = true;
       get(fileUrl, function(css) {
-        //if (!cssAPI.loading[cssId]) //if load is cancelled, ignore
-        //  return;
-        
         if (parse)
           css = parse(css);
         css = normalize(css, fileUrl, baseUrl);
-        cssAPI.set(cssId, css);
+        
+        cssAPI.inject(css);
           
-        if (!skipLoad)
+        if (!instantCallback)
           load(cssAPI);
       });
-      if (skipLoad)
+      if (instantCallback)
         load(cssAPI);
     }
   }

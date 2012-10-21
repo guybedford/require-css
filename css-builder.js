@@ -122,30 +122,7 @@ define(['require', './normalize'], function(req, normalize) {
       .replace(/[\r]/g, "\\r");
   }
   
-  cssAPI.defined = {};
-  
-  //nb can remove server injection API
-  cssAPI.set = function(cssId, css, reinject) {
-    //if (css === undefined && reinject === undefined)
-    //  cssId = djb2((css = cssId));
-    /*else */if (typeof css == 'boolean' && reinject === undefined) {
-      reinject = css;
-      css = cssId;
-    }
-    if (this.defined[cssId] !== undefined && !reinject)
-      return;
-    
-    this.defined[cssId] = css;
-    
-    return cssId;
-  }
-  
-  cssAPI.loadFile = function(cssId, parse, parseExtension) {
-    //nb despite the callback this version is synchronous to work with the write API
-    //dont reload
-    if (this.defined[cssId] !== undefined)
-      return;
-    
+  var loadCSS = function(cssId, parse) {
     var fileUrl = cssId;
     
     if (fileUrl.substr(fileUrl.length - 1, 1) == '!')
@@ -153,11 +130,6 @@ define(['require', './normalize'], function(req, normalize) {
     
     if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
       fileUrl += '.css';
-    
-    if (parseExtension) {
-      if (fileUrl.substr(fileUrl.length - parseExtension.length - 1, parseExtension.length) != '.' + parseExtension)
-        fileUrl += '.' + parseExtension;
-    }
     
     fileUrl = req.toUrl(fileUrl);
     
@@ -169,36 +141,31 @@ define(['require', './normalize'], function(req, normalize) {
     var css = loadFile(fileUrl);
     if (parse)
       css = parse(css);
-    
     css = normalize(css, fileUrl, baseUrl);
-    this.set(cssId + (parseExtension ? '.' + parseExtension : ''), css);
+    
+    return css;
   }
-  
-  /* cssAPI.clear = function(cssId) {
-    if (cssId)
-      delete cssAPI.defined[cssId];
-    else
-      for (var o in cssAPI.defined)
-        delete cssAPI.defined[o];
-  } */
   
   cssAPI.load = function(name, req, load, config) {
     //store config
-    this.config = this.config || config;
+    cssAPI.config = cssAPI.config || config;
     //just return - 'write' calls are made after exclusions so we run loading there
     load();
   }
   
   cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 1, 1) == '!')
-      return normalize(name.substr(0, name.length - 1)) + '!';
+    var separate = name.substr(name.length - 1, 1) == '!';
+    if (separate)
+      name = name.substr(0, name.length - 1);
+    if (name.substr(name.length - 4, 4) == '.css')
+      name = name.substr(0, name.length - 4);
     return normalize(name);
   }
   
   //list of cssIds included in this layer
-  cssAPI._layerBuffer = [];
+  var _layerBuffer = [];
   
-  cssAPI.write = function(pluginName, moduleName, write, parse, parseExtension) {
+  cssAPI.write = function(pluginName, moduleName, write, parse) {
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
@@ -206,57 +173,34 @@ define(['require', './normalize'], function(req, normalize) {
     if (moduleName.substr(moduleName.length - 1, 1) == '!')
       moduleName = moduleName.substr(0, moduleName.length - 1);
     
-    //(sync load)
-    this.loadFile(moduleName, parse, parseExtension);
-    
     //ammend the layer buffer and write the module as a stub
-    this._layerBuffer.push(moduleName + (parseExtension ? '.' + parseExtension : ''));
+    _layerBuffer.push(loadCSS(moduleName, parse));
     
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
-  }
-  
-  //string hashing used to name css that doesnt have an id (which is the case for builds)
-  //courtesy of http://erlycoder.com/49/javascript-hash-functions-to-convert-string-into-integer-hash-
-  var djb2 = function(str) {
-    var hash = 5381;
-    for (i = 0; i < str.length; i++)
-      hash = ((hash << 5) + hash) + str.charCodeAt(i);
-    return hash;
   }
   
   cssAPI.onLayerEnd = function(write, data) {
     //separateCSS parameter set either globally or as a layer setting
     var separateCSS = false;
-    if (this.config.separateCSS)
+    if (cssAPI.config.separateCSS)
       separateCSS = true;
-    if (this.config.modules)
-      for (var i = 0; i < this.config.modules.length; i++)
-        if (typeof this.config.modules[i].separateCSS == 'boolean')
-          separateCSS = this.config.modules[i].separateCSS;
+    if (cssAPI.config.modules)
+      for (var i = 0; i < cssAPI.config.modules.length; i++)
+        if (typeof cssAPI.config.modules[i].separateCSS == 'boolean')
+          separateCSS = cssAPI.config.modules[i].separateCSS;
     
-    //calculate layer css and index injection script
-    var css = '';
-    var index = '';
-    for (var i = 0; i < this._layerBuffer.length; i++) {
-      css += this.defined[this._layerBuffer[i]];
-      index += 'defined[\'' + this._layerBuffer[i] + '\'] = ';
-    }
+    //calculate layer css
+    var css = _layerBuffer.join('');
     
     if (separateCSS) {
-      var path = this.config.dir ? this.config.dir + data.name + '.css' : this.config.out.replace(/\.js$/, '.css');
       if (typeof console != 'undefined' && console.log)
-        console.log('Writing CSS! file: ' + path + '\n');
+        console.log('Writing CSS! file: ' + data.name + '\n');
       
       //calculate the css output path for this layer
+      var path = this.config.dir ? this.config.dir + data.name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css');
       var output = compress(normalize(css, baseUrl, path));
       
       saveFile(path, output);
-      
-      //write the layer index into the layer
-      write('require([\'css\'], function(css) { \n'
-        + 'var defined = css.defined; \n'
-        + index + 'true; \n'
-        + '});');
     }
     else {
       if (css == '')
@@ -270,23 +214,15 @@ define(['require', './normalize'], function(req, normalize) {
       normalizeParts[normalizeParts.length - 1] = 'normalize';
       var normalizeName = normalizeParts.join('/');
       
-      write(
-          'for (var c in requirejs.s.contexts) {'
-        + '  requirejs.s.contexts[c].nextTick = function(f){f();}}'
-        + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
-        + 'var defined = css.defined; \n'
+      write('require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
         + 'var baseUrl = require.toUrl(\'.\'); \n'
         + 'baseUrl = baseUrl.substr(0, 1) == \'.\' ? baseUrl.substr(1) : baseUrl; \n'
-        + index + 'true; \n'
-        + 'css.set(\'' + djb2(css) + '\', normalize(\'' + css + '\', \'/\', baseUrl)); \n'
-        + '});'
-        + 'for (var c in requirejs.s.contexts){'
-        + '  requirejs.s.contexts[c].nextTick = requirejs.nextTick;}'
-      );
+        + 'css.inject(normalize(\'' + css + '\', \'/\', baseUrl)); \n'
+        + '});');
     }
     
     //clear layer buffer for next layer
-    layerBuffer = [];
+    _layerBuffer = [];
   }
   
   return cssAPI;
