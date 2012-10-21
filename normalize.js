@@ -42,6 +42,8 @@ define(['require', 'module'], function(require, module) {
   
   // given a relative URI, calculate the absolute URI
   function absoluteURI(uri, base) {
+    if (uri.substr(0, 2) == './')
+      uri = uri.substr(3);    
     
     baseParts = base.split('/');
     uriParts = uri.split('/');

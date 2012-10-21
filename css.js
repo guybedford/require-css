@@ -69,7 +69,6 @@ define(['require', './normalize'], function(require, normalize) {
   stylesheet.type = 'text/css';
   head.appendChild(stylesheet);
   
-  cssAPI.inject;
   if (stylesheet.styleSheet)
     cssAPI.inject = function(css) {
       stylesheet.styleSheet.cssText += css;
@@ -78,6 +77,13 @@ define(['require', './normalize'], function(require, normalize) {
     cssAPI.inject = function(css) {
       stylesheet.innerHTML += css;
     }
+
+  cssAPI.inspect = function() {
+    if (stylesheet.styleSheet)
+      return stylesheet.styleShet.cssText;
+    else
+      return stylesheet.innerHTML;
+  }
   
   var instantCallbacks = {};
   cssAPI.normalize = function(name, normalize) {
@@ -127,8 +133,16 @@ define(['require', './normalize'], function(require, normalize) {
       get(fileUrl, function(css) {
         if (parse)
           css = parse(css);
-        css = normalize(css, fileUrl, baseUrl);
+          
+        var pathname = window.location.pathname.split('/');
+        pathname.pop();
+        pathname = pathname.join('/') + '/';
+       
+        //make file url absolute
+        fileUrl = normalize.convertURIBase(fileUrl, pathname, '/');
         
+        css = normalize(css, fileUrl, pathname);
+
         cssAPI.inject(css);
           
         if (!instantCallback)

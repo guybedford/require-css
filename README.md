@@ -172,3 +172,6 @@ Roadmap
 * ~~Comprehensive CSS minification including style reduction~~
 * ~~LESS extension~~
 * Sprite compilation
+* Source maps?
+
+Suggestions always appreciated - feel free to post a feature request.
