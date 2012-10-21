@@ -36,7 +36,6 @@ define(['require', 'module'], function(require, module) {
     // absolute urls are left in tact
     if (uri.match(/^\/|([^\:\/]*:)/))
       return uri;
-    
     return relativeURI(absoluteURI(uri, fromBase), toBase);
   };
   
