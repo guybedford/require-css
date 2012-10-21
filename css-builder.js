@@ -154,8 +154,7 @@ define(['require', './normalize'], function(req, normalize) {
   }
   
   cssAPI.normalize = function(name, normalize) {
-    var separate = name.substr(name.length - 1, 1) == '!';
-    if (separate)
+    if (name.substr(name.length - 1, 1) == '!')
       name = name.substr(0, name.length - 1);
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
@@ -165,16 +164,13 @@ define(['require', './normalize'], function(req, normalize) {
   //list of cssIds included in this layer
   var _layerBuffer = [];
   
-  cssAPI.write = function(pluginName, moduleName, write, parse) {
+  cssAPI.write = function(pluginName, moduleName, write, extension, parse) {
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
     
-    if (moduleName.substr(moduleName.length - 1, 1) == '!')
-      moduleName = moduleName.substr(0, moduleName.length - 1);
-    
     //ammend the layer buffer and write the module as a stub
-    _layerBuffer.push(loadCSS(moduleName, parse));
+    _layerBuffer.push(loadCSS(moduleName + (extension ? '.' + extension : ''), parse));
     
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
   }
@@ -214,11 +210,17 @@ define(['require', './normalize'], function(req, normalize) {
       normalizeParts[normalizeParts.length - 1] = 'normalize';
       var normalizeName = normalizeParts.join('/');
       
-      write('require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
+      write(
+          'for (var c in requirejs.s.contexts) {'
+        + '  requirejs.s.contexts[c].nextTick = function(f){f();}}'
+        + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
         + 'var baseUrl = require.toUrl(\'.\'); \n'
         + 'baseUrl = baseUrl.substr(0, 1) == \'.\' ? baseUrl.substr(1) : baseUrl; \n'
         + 'css.inject(normalize(\'' + css + '\', \'/\', baseUrl)); \n'
-        + '});');
+        + '});'
+        + 'for (var c in requirejs.s.contexts) {'
+        + '  requirejs.s.contexts[c].nextTick = requirejs.nextTick;}'
+      );
     }
     
     //clear layer buffer for next layer

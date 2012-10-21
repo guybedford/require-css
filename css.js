@@ -81,13 +81,20 @@ define(['require', './normalize'], function(require, normalize) {
   
   var instantCallbacks = {};
   cssAPI.normalize = function(name, normalize) {
+    var instantCallback;
     if (name.substr(name.length - 1, 1) == '!')
-      instantCallbacks[name] = true;
-    if (instantCallbacks[name])
+      instantCallback = true;
+    if (instantCallback)
       name = name.substr(0, name.length - 1);
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
-    return normalize(name);
+    
+    name = normalize(name);
+    
+    if (instantCallback)
+      instantCallbacks[name] = instantCallback;
+    
+    return name;
   }
   
   cssAPI.load = function(cssId, req, load, config, parse) {
