@@ -72,7 +72,13 @@ CSS parsing speeds are quick enough that a dynamic injection will in most cases 
 
 CSS content is downloaded as text, injected into a `<style>` tag, and the load callback is run immediately after injection. Typically this would be followed by a rendering stage, and this hasn't resulted in any content flashes whatsoever in tests so far across devices.
 
+_Note: It is advisable to avoid `import` tags in CSS files, as the injection callback will not be able to detect when these are loaded._
 
+If CSS resources such as images are important to be loaded first, these can be added to the require through a loader plugin that can act as a preloader such as [image](https://github.com/millermedeiros/requirejs-plugins) or [font](https://github.com/millermedeiros/requirejs-plugins). Then a require can be written of the form:
+
+```javascript
+require(['css!my-css', 'image!preload-background-image.jpg', 'font!google,families:[Tangerine]']);
+```
 
 Optimizer Configuration
 -----------------------
