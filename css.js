@@ -75,13 +75,13 @@ define(['require', './normalize'], function(require, normalize) {
     }
   else
     cssAPI.inject = function(css) {
-      stylesheet.innerHTML += css;
+      stylesheet.appendChild(document.createTextNode(css));
     }
 
   cssAPI.inspect = function() {
     if (stylesheet.styleSheet)
       return stylesheet.styleShet.cssText;
-    else
+    else if (stylesheet.innerHTML)
       return stylesheet.innerHTML;
   }
   
