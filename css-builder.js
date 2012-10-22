@@ -226,13 +226,8 @@ define(['require', './normalize'], function(req, normalize) {
       //normalization is based on determining the absolute pathname of the html page
       //then determining the absolute baseurl url
       //normalization is then performed from the absolute baseurl to the absolute pathname
-      write(
-          '(function() { \n'
-        + 'var nextTicks = {}, syncTick = function(f){f();}; \n'
-        + 'for (var c in requirejs.s.contexts) { \n'
-        + '  nextTicks[c] = requirejs.s.contexts[c].nextTick; \n'
-        + '  requirejs.s.contexts[c].nextTick = syncTick; \n'
-        + '} \n'
+      write(''
+        + 'for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = function(f){f()} } \n'
         + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
         + 'var pathname = window.location.pathname.split(\'/\'); \n'
         + 'pathname.pop(); \n'
@@ -241,9 +236,7 @@ define(['require', './normalize'], function(req, normalize) {
         + 'baseUrl = normalize.convertURIBase(baseUrl, pathname, \'/\'); \n'
         + 'css.inject(normalize(\'' + css + '\', baseUrl, pathname)); \n'
         + '}); \n'
-        + 'for (var c in requirejs.s.contexts) \n'
-        + '  requirejs.s.contexts[c].nextTick = nextTicks[c]; \n'
-        + '})();'
+        + 'for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = requirejs.nextTick; } \n'
       );
     }
     

@@ -80,7 +80,7 @@ define(['require', './normalize'], function(require, normalize) {
 
   cssAPI.inspect = function() {
     if (stylesheet.styleSheet)
-      return stylesheet.styleShet.cssText;
+      return stylesheet.styleSheet.cssText;
     else if (stylesheet.innerHTML)
       return stylesheet.innerHTML;
   }
