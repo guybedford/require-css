@@ -61,47 +61,14 @@ define(['require', './normalize'], function(req, normalize) {
     }
     else {
       var encoding = "utf-8",
-        file = new java.io.File(url),
-        lineSeparator = java.lang.System.getProperty("line.separator"),
-        output = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(file), encoding)),
-        stringBuffer, line,
-        content = '';
-        
-      throw "Rhino support for require-css isn't complete...";
+      
+      content = new java.lang.String(data),
+      output = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(path), encoding));
+  
       try {
-        
         output.write(0xffef);
-        output.write(data);
-        
-        //hmm... help! [Rhino support really isn't an issue but a niceity]
-        /* stringBuffer = new java.lang.StringBuffer();
-        
-        stringBuffer.append(data);
-        
-        while ((line = ))
-        
-        output = input.readLine();
-
-        // Byte Order Mark (BOM) - The Unicode Standard, version 3.0, page 324
-        // http://www.unicode.org/faq/utf_bom.html
-
-        // Note that when we use utf-8, the BOM should appear as "EF BB BF", but it doesn't due to this bug in the JDK:
-        // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4508058
-        if (line && line.length() && line.charAt(0) === 0xfeff) {
-            // Eat the BOM, since we've already found the encoding on this file,
-            // and we plan to concatenating this buffer with others; the BOM should
-            // only appear at the top of a file.
-            line = line.substring(1);
-        }
-
-        stringBuffer.append(line);
-
-        while ((line = input.readLine()) !== null) {
-            stringBuffer.append(lineSeparator);
-            stringBuffer.append(line);
-        }
-        //Make sure we return a JavaScript string and not a Java string.
-        content = String(stringBuffer.toString()); //String */
+        output.write(content, 0, content.length());
+        output.flush();
       }
       finally {
         output.close();
