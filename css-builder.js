@@ -35,8 +35,7 @@ define(['require', './normalize'], function(req, normalize) {
         file = new java.io.File(path),
         lineSeparator = java.lang.System.getProperty("line.separator"),
         input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), encoding)),
-        stringBuffer, line,
-        content = '';
+        stringBuffer, line;
       try {
         stringBuffer = new java.lang.StringBuffer();
         line = input.readLine();
@@ -44,10 +43,9 @@ define(['require', './normalize'], function(req, normalize) {
           line = line.substring(1);
         stringBuffer.append(line);
         while ((line = input.readLine()) !== null) {
-          stringBuffer.append(lineSeparator);
-          stringBuffer.append(line);
+          stringBuffer.append(lineSeparator).append(line);
         }
-        content = String(stringBuffer.toString());
+        return String(stringBuffer.toString());
       }
       finally {
         input.close();
