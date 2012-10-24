@@ -31,10 +31,9 @@ define(['require', './normalize'], function(req, normalize) {
       return file;
     }
     else {
-      var encoding = "utf-8",
-        file = new java.io.File(path),
+      var file = new java.io.File(path),
         lineSeparator = java.lang.System.getProperty("line.separator"),
-        input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), encoding)),
+        input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), 'utf-8')),
         stringBuffer, line;
       try {
         stringBuffer = new java.lang.StringBuffer();
@@ -60,13 +59,10 @@ define(['require', './normalize'], function(req, normalize) {
       fs.writeFileSync(path, data, 'utf8');
     }
     else {
-      var encoding = "utf-8",
-      
-      content = new java.lang.String(data),
-      output = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(path), encoding));
+      var content = new java.lang.String(data);
+      var output = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(path), 'utf-8'));
   
       try {
-        output.write(0xffef);
         output.write(content, 0, content.length());
         output.flush();
       }
