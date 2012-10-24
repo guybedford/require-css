@@ -188,7 +188,7 @@ define(['require', './normalize'], function(req, normalize) {
     var separateCSS = false;
     if (cssAPI.config.separateCSS)
       separateCSS = true;
-    if (typeof curModule == 'number' && cssAPI.config.modules[curModule].separateCSS != 'undefined')
+    if (typeof curModule == 'number' && cssAPI.config.modules[curModule].separateCSS !== undefined)
       separateCSS = cssAPI.config.modules[curModule].separateCSS;
     curModule = null;
     
