@@ -12,7 +12,6 @@ define(['require', './normalize'], function(require, normalize) {
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
   
-  var baseUrl = require.toUrl('.');
   var head = document.getElementsByTagName('head')[0];
   
   
