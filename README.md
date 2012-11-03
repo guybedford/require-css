@@ -31,7 +31,7 @@ Installation and Setup
 
 Download the require-css folder manually or use [volo](https://github.com/volojs/volo)(`npm install volo -g`):
 
-```
+```bash
 volo add guybedford/require-css
 ```
 
