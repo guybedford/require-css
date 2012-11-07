@@ -76,7 +76,7 @@ define(['require', 'module'], function(require, module) {
 
     // each base folder difference is thus a backtrack
     baseParts = base.split('/');
-    uriParts = uri.split('/');
+    var uriParts = uri.split('/');
     out = '';
     while (baseParts.shift())
       out += '../';
