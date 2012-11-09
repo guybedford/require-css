@@ -7,8 +7,7 @@
  * '!' suffix skips load checking
  *
  */
-define(['require', './normalize'], function(require, normalize) {
-  
+define(['./normalize'], function(normalize) {
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
   
