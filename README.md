@@ -180,4 +180,6 @@ Roadmap
 * Sprite compilation
 * Source maps?
 
+I'm currently working on a framework for render and build management based on these principles. To discuss ideas please get in touch - guybedford@gmail.com.
+
 Suggestions always appreciated - feel free to post a feature request.
