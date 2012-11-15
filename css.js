@@ -35,7 +35,7 @@ define(['./normalize'], function(normalize) {
         }
       }
     
-    xhr.open('GET', url, true);
+    xhr.open('GET', url, requirejs.inlineRequire ? false : true);
   
     xhr.onreadystatechange = function (evt) {
       var status, err;
