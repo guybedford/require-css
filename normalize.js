@@ -107,7 +107,7 @@ define(['require', 'module'], function(require, module) {
       url = result[2] || result[4];
       var newUrl = convertURIBase(url, fromBase, toBase);
       source = source.substr(0, importRegEx.lastIndex - url.length - 1) + newUrl + source.substr(importRegEx.lastIndex - 1);
-      importRegEx.lastIndex = urlRegEx.lastIndex + (newUrl.length - url.length);
+      importRegEx.lastIndex = importRegEx.lastIndex + (newUrl.length - url.length);
     }
     
     return source;
