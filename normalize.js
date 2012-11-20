@@ -94,15 +94,21 @@ define(['require', 'module'], function(require, module) {
     var result, url, source;
 
     while (result = urlRegEx.exec(source)) {
-      url = convertURIBase(result[2] || result[4] || result[6], fromBase, toBase);
-      source = source.replace(result[2] || result[4] || result[6], url);
+      url = result[2] || result[4] || result[6];
+      var newUrl = convertURIBase(url, fromBase, toBase);
+      var quoteLen = result[2] || result[4] ? 1 : 0;
+      source = source.substr(0, urlRegEx.lastIndex - url.length - quoteLen - 1) + newUrl + source.substr(urlRegEx.lastIndex - quoteLen - 1);
+      urlRegEx.lastIndex = urlRegEx.lastIndex + (newUrl.length - url.length);
     }
     
     var importRegEx = /(@import\s*'(.*)')|(@import\s*"(.*)")/g;
     
     while (result = importRegEx.exec(source)) {
-      url = convertURIBase(result[2] || result[4], fromBase, toBase);
-      source = source.replace(result[2] || result[4], url);
+      url = result[2] || result[4];
+      var quoteLen = result[2] || result[4] ? 1 : 0;
+      var newUrl = convertURIBase(url, fromBase, toBase);
+      source = source.substr(0, importRegEx.lastIndex - url.length - quoteLen - 1) + newUrl + source.substr(importRegEx.lastIndex - quoteLen - 1);
+      importRegEx.lastIndex = urlRegEx.lastIndex + (newUrl.length - url.length);
     }
     
     return source;
