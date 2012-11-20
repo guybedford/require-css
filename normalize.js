@@ -105,9 +105,8 @@ define(['require', 'module'], function(require, module) {
     
     while (result = importRegEx.exec(source)) {
       url = result[2] || result[4];
-      var quoteLen = result[2] || result[4] ? 1 : 0;
       var newUrl = convertURIBase(url, fromBase, toBase);
-      source = source.substr(0, importRegEx.lastIndex - url.length - quoteLen - 1) + newUrl + source.substr(importRegEx.lastIndex - quoteLen - 1);
+      source = source.substr(0, importRegEx.lastIndex - url.length - 1) + newUrl + source.substr(importRegEx.lastIndex - 1);
       importRegEx.lastIndex = urlRegEx.lastIndex + (newUrl.length - url.length);
     }
     
