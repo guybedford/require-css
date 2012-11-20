@@ -128,8 +128,6 @@ define(['require', './normalize'], function(req, normalize) {
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 1, 1) == '!')
       name = name.substr(0, name.length - 1);
-    if (name.substr(name.length - 4, 4) == '.css')
-      name = name.substr(0, name.length - 4);
     return normalize(name);
   }
   
