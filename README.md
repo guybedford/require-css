@@ -145,6 +145,8 @@ To enable the CSS compression, install csso with npm:
 
 The build log will display the compression results.
 
+When running the r.js optimizer through NodeJS, sometimes the global module isn't found. In this case install csso as a local node module so it can be found.
+
 
 Conditional CSS
 ---
