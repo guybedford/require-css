@@ -12,10 +12,11 @@
   modules: [
   {
     name: 'app',
-    exclude: ['core-components']
+    exclude: ['core-components'],
   },
   {
     name: 'core-components',
+    separateCSS: true,
     create: true,
     include: ['components/component'], 
   }
