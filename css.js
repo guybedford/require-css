@@ -137,7 +137,7 @@ define(['./normalize'], function(normalize) {
         pathname = pathname.join('/') + '/';
 
         //make file url absolute
-        if (fileUrl.substr(0, 1) != '/')
+        if (fileUrl.substr(0, 1) != '/'  && (typeof window != 'undefined' || fileUrl.subttr(0, 1) != '~'))
           fileUrl = '/' + normalize.convertURIBase(fileUrl, pathname, '/');
         
         css = normalize(css, fileUrl, pathname);
