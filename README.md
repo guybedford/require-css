@@ -80,6 +80,17 @@ If CSS resources such as images are important to be loaded first, these can be a
 require(['css!my-css', 'image!preload-background-image.jpg', 'font!google,families:[Tangerine]']);
 ```
 
+Development Environment
+-----------------------
+
+When developing on a local file server, an AJAX request will be made to load each CSS file. 
+This can conflict with browser origin settings on the local server as AJAX requests are by default
+not allowed to other files.
+
+To enable this, configure the browser to allow this, or set the CORS settings in the headers.
+
+As an example, [some configuration help for Chrome is given here](http://askubuntu.com/questions/160245/making-google-chrome-option-allow-file-access-from-files-permanent).
+
 Optimizer Configuration
 -----------------------
 
