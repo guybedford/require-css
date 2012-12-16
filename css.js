@@ -129,8 +129,6 @@ define(['./normalize'], function(normalize) {
     //internal url -> download and inject into <style> tag
     else {
       get(fileUrl, function(css) {
-        if (parse)
-          css = parse(css);
           
         var pathname = window.location.pathname.split('/');
         pathname.pop();
@@ -141,6 +139,9 @@ define(['./normalize'], function(normalize) {
           fileUrl = '/' + normalize.convertURIBase(fileUrl, pathname, '/');
         
         css = normalize(css, fileUrl, pathname);
+
+        if (parse)
+          css = parse(css);
 
         cssAPI.inject(css);
           
