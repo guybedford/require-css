@@ -35,7 +35,7 @@ Download the require-css folder manually or use [volo](https://github.com/volojs
 volo add guybedford/require-css
 ```
 
-For ease of use add the following [map configuration](http://requirejs.org/docs/api.html#config-map) in RequireJS:
+To allow the direct `css!` usage, add the following [map configuration](http://requirejs.org/docs/api.html#config-map) in RequireJS:
 
 ```javascript
 map: {
@@ -79,6 +79,26 @@ If CSS resources such as images are important to be loaded first, these can be a
 ```javascript
 require(['css!my-css', 'image!preload-background-image.jpg', 'font!google,families:[Tangerine]']);
 ```
+
+Modular CSS
+-----------
+
+RequireCSS implies a CSS modularisation where styles can be scoped directly to the render code that they are bundled with.
+
+Just like JS requires, the order of CSS injection can't be guaranteed. The idea here is that whenever there are style overrides, they should
+be based on using a more specific selector with an extra id or class at the base, and not assuming a CSS load order. Reset and global styles are a repeated dependency of all 
+modular styles that build on top of them.
+
+Development Environment
+-----------------------
+
+When developing on a local file server, an AJAX request will be made to load each CSS file. 
+This can conflict with browser origin settings on the local server as AJAX requests are by default
+not allowed to other files.
+
+To enable this, configure the browser to allow this, or set CORS headers.
+
+As an example, [some configuration help for Chrome is given here](http://askubuntu.com/questions/160245/making-google-chrome-option-allow-file-access-from-files-permanent).
 
 Optimizer Configuration
 -----------------------
@@ -181,7 +201,5 @@ Roadmap
 * ~~LESS extension~~
 * Sprite compilation
 * Source maps?
-
-I'm currently working on a framework for render and build management based on these principles. To discuss ideas please get in touch - guybedford@gmail.com.
 
 Suggestions always appreciated - feel free to post a feature request.
