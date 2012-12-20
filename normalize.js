@@ -32,7 +32,16 @@
 
 define(['require', 'module'], function(require, module) {
   
+  // regular expression for removing double slashes
+  // eg http://www.example.com//my///url/here -> http://www.example.com/my/url/here
+  var slashes = /(^\/+)|([^:])\/+/g
+  var removeDoubleSlashes = function(uri) {
+    return uri.replace(slashes, '$2/');
+  }
+
+  // given a relative URI, and two absolute base URIs, convert it from one base to another
   function convertURIBase(uri, fromBase, toBase) {
+    uri = removeDoubleSlashes(uri);
     // absolute urls are left in tact
     if (uri.match(/^\/|([^\:\/]*:)/))
       return uri;
@@ -89,8 +98,11 @@ define(['require', 'module'], function(require, module) {
   };
   
   var normalizeCSS = function(source, fromBase, toBase) {
+
+    fromBase = removeDoubleSlashes(fromBase);
+    toBase = removeDoubleSlashes(toBase);
     
-    var urlRegEx = /(url\(\s*"(.*)"\s*\))|(url\(\s*'(.*)'\s*\))|(url\(\s*(.*)\s*\))/g;
+    var urlRegEx = /(url\(\s*"([^'"]*)"\s*\))|(url\(\s*'([^'"]*)'\s*\))|(url\(\s*([^'"]*)\s*\))/g;
     var result, url, source;
 
     while (result = urlRegEx.exec(source)) {

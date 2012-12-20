@@ -99,7 +99,11 @@ define(['require', './normalize'], function(req, normalize) {
     var css = loadFile(fileUrl);
     if (parse)
       css = parse(css);
-      
+
+    //make file url absolute
+    if (fileUrl.substr(0, 1) != '/')
+      fileUrl = '/' + fileUrl;
+
     //normalize all css to the base url - as the common path reference
     //for injection we then only need one normalization from the base url
     css = normalize(css, fileUrl, baseUrl);
