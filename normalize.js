@@ -102,7 +102,7 @@ define(['require', 'module'], function(require, module) {
     fromBase = removeDoubleSlashes(fromBase);
     toBase = removeDoubleSlashes(toBase);
     
-    var urlRegEx = /(url\(\s*"([^'"]*)"\s*\))|(url\(\s*'([^'"]*)'\s*\))|(url\(\s*([^'"]*)\s*\))/g;
+    var urlRegEx = /(url\(\s*"([^\)]*)"\s*\))|(url\(\s*'([^\)]*)'\s*\))|(url\(\s*([^\)]*)\s*\))/g;
     var result, url, source;
 
     while (result = urlRegEx.exec(source)) {
