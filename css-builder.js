@@ -182,9 +182,7 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //derive the absolute path for the normalize helper
-      var normalizeParts = req.toUrl('css').substr(baseUrl.length - 1).split('/');
-      normalizeParts[normalizeParts.length - 1] = 'normalize';
-      var normalizeName = normalizeParts.join('/');
+      var normalizeName = normalize.convertURIBase('normalize.js', req.toUrl('./normalize.js'), require.toUrl('.'));
       
       //the code below overrides async require functionality to ensure instant layer css injection
       //it then runs normalization and injection
