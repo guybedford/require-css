@@ -102,6 +102,7 @@ define(['./normalize'], function(normalize) {
   }
   
   cssAPI.load = function(cssId, req, load, config, parse) {
+    var useLinks = config && config.css && config.css.useLinks;
     var instantCallback = instantCallbacks[cssId];
     if (instantCallback)
       delete instantCallbacks[cssId];
@@ -114,7 +115,7 @@ define(['./normalize'], function(normalize) {
     fileUrl = req.toUrl(fileUrl);
     
     //external url -> add as a <link> tag to load. onload support not reliable so not provided
-    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://') {
+    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://' || useLinks) {
       if (parse)
         throw 'Cannot preprocess external css.';
       var link = document.createElement('link');
