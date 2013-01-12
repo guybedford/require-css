@@ -16,8 +16,13 @@ define(['./normalize'], function(normalize) {
   
   /* XHR code - copied from RequireJS text plugin */
   var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
+  var fileCache = {};
   var get = function(url, callback, errback) {
-  
+    if (fileCache[url]) {
+      callback(fileCache[url]);
+      return;
+    }
+
     var xhr, i, progId;
     if (typeof XMLHttpRequest !== 'undefined')
       xhr = new XMLHttpRequest();
@@ -49,8 +54,10 @@ define(['./normalize'], function(normalize) {
           err.xhr = xhr;
           errback(err);
         }
-        else
+        else {
+          fileCache[url] = xhr.responseText;
           callback(xhr.responseText);
+        }
       }
     };
     
@@ -100,6 +107,46 @@ define(['./normalize'], function(normalize) {
     
     return name;
   }
+
+  var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
+
+  var loadImports = function(css, callback) {
+    // detect all import statements in the css
+    var importUrls = [];
+    var importIndex = [];
+    var importLength = [];
+    
+    var match;
+    while (match = importRegEx.exec(css)) {
+      var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
+      importUrls.push(importUrl);
+      importIndex.push(importRegEx.lastIndex - match[0].length);
+      importLength.push(match[0].length);
+    }
+
+    var completeCnt = 0;
+    for (var i = 0; i < importUrls.length; i++)
+      (function(i) {
+        get(importUrls[i], function(_css) {
+          loadImports(_css, function(parsedCSS) {
+            console.log(css);
+            css = css.substr(0, importIndex[i]) + parsedCSS + css.substr(importIndex[i] + importLength[i]);
+            console.log(css);
+            var lenDiff = parsedCSS.length - importLength[i];
+            for (var j = i + 1; j < importUrls.length; j++)
+              importIndex[j] += lenDiff;
+            completeCnt++;
+            if (completeCnt == importUrls.length) {
+              callback(css);
+            }
+          });
+        })
+
+      })(i);
+
+    if (importUrls.length == 0)
+      callback(css);
+  }
   
   cssAPI.load = function(cssId, req, load, config, parse) {
     var instantCallback = instantCallbacks[cssId];
@@ -143,10 +190,12 @@ define(['./normalize'], function(normalize) {
         if (parse)
           css = parse(css);
 
-        cssAPI.inject(css);
-          
-        if (!instantCallback)
-          load(cssAPI);
+        // load any imports
+        loadImports(css, function(css) {
+          cssAPI.inject(css);
+          if (!instantCallback)
+            load(cssAPI);
+        });
       });
       if (instantCallback)
         load(cssAPI);
