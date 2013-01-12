@@ -129,9 +129,7 @@ define(['./normalize'], function(normalize) {
       (function(i) {
         get(importUrls[i], function(_css) {
           loadImports(_css, function(parsedCSS) {
-            console.log(css);
             css = css.substr(0, importIndex[i]) + parsedCSS + css.substr(importIndex[i] + importLength[i]);
-            console.log(css);
             var lenDiff = parsedCSS.length - importLength[i];
             for (var j = i + 1; j < importUrls.length; j++)
               importIndex[j] += lenDiff;
