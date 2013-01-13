@@ -102,7 +102,7 @@ define(['require', 'module'], function(require, module) {
     fromBase = removeDoubleSlashes(fromBase);
     toBase = removeDoubleSlashes(toBase);
     
-    var urlRegEx = /(url\(\s*"([^\)]*)"\s*\))|(url\(\s*'([^\)]*)'\s*\))|(url\(\s*([^\)]*)\s*\))/g;
+    var urlRegEx = /^(?!\s*@import).*(url\(\s*"([^\)]*)"\s*\))|(url\(\s*'([^\)]*)'\s*\))|(url\(\s*([^\)]*)\s*\))/g;
     var result, url, source;
 
     while (result = urlRegEx.exec(source)) {
@@ -111,15 +111,6 @@ define(['require', 'module'], function(require, module) {
       var quoteLen = result[2] || result[4] ? 1 : 0;
       source = source.substr(0, urlRegEx.lastIndex - url.length - quoteLen - 1) + newUrl + source.substr(urlRegEx.lastIndex - quoteLen - 1);
       urlRegEx.lastIndex = urlRegEx.lastIndex + (newUrl.length - url.length);
-    }
-    
-    var importRegEx = /(@import\s*'(.*)')|(@import\s*"(.*)")/g;
-    
-    while (result = importRegEx.exec(source)) {
-      url = result[2] || result[4];
-      var newUrl = convertURIBase(url, fromBase, toBase);
-      source = source.substr(0, importRegEx.lastIndex - url.length - 1) + newUrl + source.substr(importRegEx.lastIndex - 1);
-      importRegEx.lastIndex = importRegEx.lastIndex + (newUrl.length - url.length);
     }
     
     return source;

@@ -108,29 +108,53 @@ define(['./normalize'], function(normalize) {
     return name;
   }
 
+  // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
 
-  var loadImports = function(css, callback) {
-    // detect all import statements in the css
-    var importUrls = [];
-    var importIndex = [];
-    var importLength = [];
-    
-    var match;
-    while (match = importRegEx.exec(css)) {
-      var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
-      importUrls.push(importUrl);
-      importIndex.push(importRegEx.lastIndex - match[0].length);
-      importLength.push(match[0].length);
-    }
+  var pathname = window.location.pathname.split('/');
+  pathname.pop();
+  pathname = pathname.join('/') + '/';
 
-    var completeCnt = 0;
-    for (var i = 0; i < importUrls.length; i++)
-      (function(i) {
-        get(importUrls[i], function(_css) {
-          loadImports(_css, function(parsedCSS) {
-            css = css.substr(0, importIndex[i]) + parsedCSS + css.substr(importIndex[i] + importLength[i]);
-            var lenDiff = parsedCSS.length - importLength[i];
+  var loadCSS = function(fileUrl, callback) {
+
+    //make file url absolute
+    if (fileUrl.substr(0, 1) != '/')
+      fileUrl = '/' + normalize.convertURIBase(fileUrl, pathname, '/');
+
+    get(fileUrl, function(css) {
+
+      // normalize the css (except import statements)
+      console.log(css);
+      css = normalize(css, fileUrl, pathname);
+      console.log(css);
+
+      // detect all import statements in the css and normalize
+      var importUrls = [];
+      var importIndex = [];
+      var importLength = [];
+      var match;
+      while (match = importRegEx.exec(css)) {
+        var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
+
+        // normalize the import url
+        if (importUrl.indexOf('.') == -1)
+          importUrl += '.less';
+        // only normalize relative paths
+        if (importUrl.substr(0, 1) == '.')
+          importUrl = convertURIBase(importUrl, fileUrl, pathname);
+
+        importUrls.push(importUrl);
+        importIndex.push(importRegEx.lastIndex - match[0].length);
+        importLength.push(match[0].length);
+      }
+
+      // load the import stylesheets and substitute into the css
+      var completeCnt = 0;
+      for (var i = 0; i < importUrls.length; i++)
+        (function(i) {
+          loadCSS(importUrls[i], function(importCSS) {
+            css = css.substr(0, importIndex[i]) + importCSS + css.substr(importIndex[i] + importLength[i]);
+            var lenDiff = importCSS.length - importLength[i];
             for (var j = i + 1; j < importUrls.length; j++)
               importIndex[j] += lenDiff;
             completeCnt++;
@@ -138,12 +162,11 @@ define(['./normalize'], function(normalize) {
               callback(css);
             }
           });
-        })
+        })(i);
 
-      })(i);
-
-    if (importUrls.length == 0)
-      callback(css);
+      if (importUrls.length == 0)
+        callback(css);
+    });
   }
   
   cssAPI.load = function(cssId, req, load, config, parse) {
@@ -173,28 +196,17 @@ define(['./normalize'], function(normalize) {
     }
     //internal url -> download and inject into <style> tag
     else {
-      get(fileUrl, function(css) {
-          
-        var pathname = window.location.pathname.split('/');
-        pathname.pop();
-        pathname = pathname.join('/') + '/';
-
-        //make file url absolute
-        if (fileUrl.substr(0, 1) != '/')
-          fileUrl = '/' + normalize.convertURIBase(fileUrl, pathname, '/');
-        
-        css = normalize(css, fileUrl, pathname);
-
+      loadCSS(fileUrl, function(css) {
+        // run parsing last - since less is a CSS subset this works fine
         if (parse)
           css = parse(css);
 
-        // load any imports
-        loadImports(css, function(css) {
-          cssAPI.inject(css);
-          if (!instantCallback)
-            load(cssAPI);
-        });
+        cssAPI.inject(css);
+
+        if (!instantCallback)
+          load(cssAPI);
       });
+
       if (instantCallback)
         load(cssAPI);
     }
