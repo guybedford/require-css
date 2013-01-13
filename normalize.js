@@ -36,7 +36,7 @@ define(['require', 'module'], function(require, module) {
   // eg http://www.example.com//my///url/here -> http://www.example.com/my/url/here
   var slashes = /([^:])\/+/g
   var removeDoubleSlashes = function(uri) {
-    return uri.replace(slashes, '$2/');
+    return uri.replace(slashes, '$1/');
   }
 
   // given a relative URI, and two absolute base URIs, convert it from one base to another
