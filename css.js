@@ -124,9 +124,7 @@ define(['./normalize'], function(normalize) {
     get(fileUrl, function(css) {
 
       // normalize the css (except import statements)
-      console.log(css);
       css = normalize(css, fileUrl, pathname);
-      console.log(css);
 
       // detect all import statements in the css and normalize
       var importUrls = [];
