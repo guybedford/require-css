@@ -34,7 +34,7 @@ define(['require', 'module'], function(require, module) {
   
   // regular expression for removing double slashes
   // eg http://www.example.com//my///url/here -> http://www.example.com/my/url/here
-  var slashes = /(^\/+)|([^:])\/+/g
+  var slashes = /([^:])\/+/g
   var removeDoubleSlashes = function(uri) {
     return uri.replace(slashes, '$2/');
   }
