@@ -1,5 +1,7 @@
 define(['require', './normalize'], function(req, normalize) {
   var baseUrl = require.toUrl('.');
+
+  var nodePrint = requirejs.s.contexts.build.require('node/print');
   
   var cssAPI = {};
   
@@ -9,15 +11,15 @@ define(['require', './normalize'], function(req, normalize) {
         var csso = require.nodeRequire('csso');
         var csslen = css.length;
         css = csso.justDoIt(css);
-        console.log('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
+        nodePrint('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
         return css;
       }
       catch(e) {
-        console.log('Compression module not installed. Use "npm install csso -g" to enable.');
+        nodePrint('Compression module not installed. Use "npm install csso -g" to enable.');
         return css;
       }
     }
-    console.log('Compression not supported outside of nodejs environments.');
+    nodePrint('Compression not supported outside of nodejs environments.');
     return css;
   }
   
@@ -165,8 +167,7 @@ define(['require', './normalize'], function(req, normalize) {
     var css = _layerBuffer.join('');
     
     if (separateCSS) {
-      if (typeof console != 'undefined' && console.log)
-        console.log('Writing CSS! file: ' + data.name + '\n');
+      nodePrint('Writing CSS! file: ' + data.name + '\n');
       
       //calculate the css output path for this layer
       var path = this.config.dir ? this.config.dir + data.name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css');
