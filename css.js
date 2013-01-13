@@ -115,7 +115,7 @@ define(['./normalize'], function(normalize) {
   pathname.pop();
   pathname = pathname.join('/') + '/';
 
-  var loadCSS = function(fileUrl, callback) {
+  var loadCSS = function(fileUrl, callback, errback) {
 
     //make file url absolute
     if (fileUrl.substr(0, 1) != '/')
@@ -134,12 +134,9 @@ define(['./normalize'], function(normalize) {
       while (match = importRegEx.exec(css)) {
         var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
 
-        // normalize the import url
+        // add less extension if necessary
         if (importUrl.indexOf('.') == -1)
           importUrl += '.less';
-        // only normalize relative paths
-        if (importUrl.substr(0, 1) == '.')
-          importUrl = convertURIBase(importUrl, fileUrl, pathname);
 
         importUrls.push(importUrl);
         importIndex.push(importRegEx.lastIndex - match[0].length);
@@ -159,12 +156,12 @@ define(['./normalize'], function(normalize) {
             if (completeCnt == importUrls.length) {
               callback(css);
             }
-          });
+          }, errback);
         })(i);
 
       if (importUrls.length == 0)
         callback(css);
-    });
+    }, errback);
   }
   
   cssAPI.load = function(cssId, req, load, config, parse) {
@@ -203,7 +200,7 @@ define(['./normalize'], function(normalize) {
 
         if (!instantCallback)
           load(cssAPI);
-      });
+      }, load.error);
 
       if (instantCallback)
         load(cssAPI);

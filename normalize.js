@@ -101,14 +101,14 @@ define(['require', 'module'], function(require, module) {
 
     fromBase = removeDoubleSlashes(fromBase);
     toBase = removeDoubleSlashes(toBase);
-    
-    var urlRegEx = /^(?!\s*@import).*(url\(\s*"([^\)]*)"\s*\))|(url\(\s*'([^\)]*)'\s*\))|(url\(\s*([^\)]*)\s*\))/g;
+
+    var urlRegEx = /@import\s*("([^"]*)"|'([^']*)')|url\s*\(\s*(\s*"([^"]*)"|'([^']*)'|[^\)]*\s*)\s*\)/ig;
     var result, url, source;
 
     while (result = urlRegEx.exec(source)) {
-      url = result[2] || result[4] || result[6];
+      url = result[3] || result[2] || result[5] || result[6] || result[4];
       var newUrl = convertURIBase(url, fromBase, toBase);
-      var quoteLen = result[2] || result[4] ? 1 : 0;
+      var quoteLen = result[5] || result[6] ? 1 : 0;
       source = source.substr(0, urlRegEx.lastIndex - url.length - quoteLen - 1) + newUrl + source.substr(urlRegEx.lastIndex - quoteLen - 1);
       urlRegEx.lastIndex = urlRegEx.lastIndex + (newUrl.length - url.length);
     }
