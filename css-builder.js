@@ -147,7 +147,16 @@ define(['require', './normalize'], function(req, normalize) {
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
     
-    _layerBuffer.push(loadCSS(moduleName + (extension ? '.' + extension : ''), parse));
+    var inlineString = '';
+    if (parse) {
+      inlineString = moduleName.indexOf('?');
+      inlineString = inlineString == -1 ? '' : moduleName.substr(inlineString + 1);
+    }
+
+    _layerBuffer.push(loadCSS(
+      (inlineString ? moduleName.substr(0, moduleName.length - inlineString.length - 1) : moduleName) + 
+      (extension ? '.' + extension : '')
+    , parse));
     
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
   }
