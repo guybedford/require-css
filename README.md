@@ -80,6 +80,19 @@ If CSS resources such as images are important to be loaded first, these can be a
 require(['css!my-css', 'image!preload-background-image.jpg', 'font!google,families:[Tangerine]']);
 ```
 
+If you'd like to force links to be added instead of injecting directly into style tags, put the following option in your requirejs configuration:
+
+```javascript
+requirejs.config({
+  //...
+  css: {
+    useLinks: true
+  }
+});
+
+```
+
+
 Modular CSS
 -----------
 
