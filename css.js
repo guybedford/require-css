@@ -6,13 +6,23 @@
  * 
  * '!' suffix skips load checking
  *
+ *
+ * in Chrome 19+, IE10+, Firefox 9+, <link> tags are used with onload support
+ * in all other environments, <style> tags are used with injection to mimic onload support
+ *
  */
-define(['./normalize'], function(normalize) {
+define(['./normalize', 'module'], function(normalize, module) {
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
   
   var head = document.getElementsByTagName('head')[0];
-  
+
+  var agentMatch = window.navigator.userAgent.match(/Chrome\/([^ \.]*)|MSIE ([^ ;]*)|Firefox\/([^ ;]*)/);
+  var useLinks = parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 19;
+
+  var config = module.config();
+  if (config && config.useLinks !== undefined)
+    useLinks = config.useLinks;
   
   /* XHR code - copied from RequireJS text plugin */
   var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
@@ -176,8 +186,8 @@ define(['./normalize'], function(normalize) {
     
     fileUrl = req.toUrl(fileUrl);
     
-    //external url -> add as a <link> tag to load. onload support not reliable so not provided
-    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://') {
+    //external url -> add as a <link> tag to load. onload support not reliable so only provided when enabled.
+    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://' || (useLinks && !parse)) {
       if (parse)
         throw 'Cannot preprocess external css.';
       var link = document.createElement('link');
@@ -185,9 +195,14 @@ define(['./normalize'], function(normalize) {
       link.rel = 'stylesheet';
       link.href = fileUrl;
       head.appendChild(link);
-      
-      //only instant callback due to onload not being reliable
-      load(cssAPI);
+
+      if (useLinks)
+        link.onload = function() {
+          load(cssAPI);
+        }
+      else      
+        //only instant callback due to onload not being reliable
+        load(cssAPI);
     }
     //internal url -> download and inject into <style> tag
     else {

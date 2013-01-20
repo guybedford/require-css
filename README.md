@@ -60,26 +60,6 @@ If the layer is included as a `<script>` tag, only one browser request is needed
 
 Even better than including a layer as a `<script>` tag is to include the layer dynamically with a non-blocking require. Then the page can be displayed while the layer is still loading asynchronously in the background. In this case, the CSS that goes with a template being dynamically rendered is loaded with that same script asynchronously. No longer does it need to sit in a `<link>` tag that blocks the page display unnecessarily.
 
-
-Injection methods
------------------
-
-Previous attempts have used the `onLoad` callback for a `<link>` tag to register CSS require completion. This method is limited since while it is supported in all versions of IE, it has varying support in other browsers and mobile devices. Because it can't reliably work, there are many hacks which are used to get around this.
-
-In a typical use case, one doesn't mind if the assets have completed downloading yet. Hence the main CSS load requirement is that the CSS has been downloaded and parsed.
-
-CSS parsing speeds are quick enough that a dynamic injection will in most cases be instantanous. Thus, there is no real disadvantage to the method used here.
-
-CSS content is downloaded as text, injected into a `<style>` tag, and the load callback is run immediately after injection. Typically this would be followed by a rendering stage, and this hasn't resulted in any content flashes whatsoever in tests so far across devices.
-
-_Note: It is advisable to avoid `import` tags in CSS files, as the injection callback will not be able to detect when these are loaded._
-
-If CSS resources such as images are important to be loaded first, these can be added to the require through a loader plugin that can act as a preloader such as [image](https://github.com/millermedeiros/requirejs-plugins) or [font](https://github.com/millermedeiros/requirejs-plugins). Then a require can be written of the form:
-
-```javascript
-require(['css!my-css', 'image!preload-background-image.jpg', 'font!google,families:[Tangerine]']);
-```
-
 Modular CSS
 -----------
 
@@ -88,17 +68,6 @@ RequireCSS implies a CSS modularisation where styles can be scoped directly to t
 Just like JS requires, the order of CSS injection can't be guaranteed. The idea here is that whenever there are style overrides, they should
 be based on using a more specific selector with an extra id or class at the base, and not assuming a CSS load order. Reset and global styles are a repeated dependency of all 
 modular styles that build on top of them.
-
-Development Environment
------------------------
-
-When developing on a local file server, an AJAX request will be made to load each CSS file. 
-This can conflict with browser origin settings on the local server as AJAX requests are by default
-not allowed to other files.
-
-To enable this, configure the browser to allow this, or set CORS headers.
-
-As an example, [some configuration help for Chrome is given here](http://askubuntu.com/questions/160245/making-google-chrome-option-allow-file-access-from-files-permanent).
 
 Optimizer Configuration
 -----------------------
@@ -194,6 +163,24 @@ define(function() {
 
 Separate build layers can then be made for mobile specific use. Read more at the [Require-IS](https://github.com/guybedford/require-is) project page.
 
+Injection methods
+-----------------
+
+Previous attempts have used the `onLoad` callback for a `<link>` tag to register CSS require completion. The hard part is detecting when this is supported.
+
+Require-CSS has a default method of loading the CSS as text (including @import support), and injecting it into a style tag with normalization applied.
+
+The callback of the require is then fired, allowing a dynamic render of HTML which is dependent on the CSS. Since the HTML is injected after the CSS, styles
+are applied instantly.
+
+Then, in modern browsers that are known to support the `onLoad` event for a `<link>` tag (Chrome 19+, IE10+, Firefox 9+), the link method is used,
+allowing full CSS debugging through the inspector.
+
+If CSS resources such as images are important to be loaded first, these can be added to the require through a loader plugin that can act as a preloader such as [image](https://github.com/millermedeiros/requirejs-plugins) or [font](https://github.com/millermedeiros/requirejs-plugins). Then a require can be written of the form:
+
+```javascript
+require(['css!my-css', 'image!preload-background-image.jpg', 'font!google,families:[Tangerine]']);
+```
 
 Roadmap
 -------
