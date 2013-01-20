@@ -166,9 +166,8 @@ Separate build layers can then be made for mobile specific use. Read more at the
 Injection methods
 -----------------
 
-Previous attempts have used the `onLoad` callback for a `<link>` tag to register CSS require completion. The hard part is detecting when this is supported.
-
-Require-CSS has a default method of loading the CSS as text (including @import support), and injecting it into a style tag with normalization applied.
+There are well known issues with the `onLoad` callback for a `<link>` tag to register CSS require completion. Instead of trying to feature detect
+this support, Require-CSS has a default method of loading the CSS as text (including @import support), and injecting it into a style tag with normalization applied.
 
 The callback of the require is then fired, allowing a dynamic render of HTML which is dependent on the CSS. Since the HTML is injected after the CSS, styles
 are applied instantly.
