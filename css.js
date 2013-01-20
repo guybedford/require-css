@@ -18,7 +18,7 @@ define(['./normalize', 'module'], function(normalize, module) {
   var head = document.getElementsByTagName('head')[0];
 
   var agentMatch = window.navigator.userAgent.match(/Chrome\/([^ \.]*)|MSIE ([^ ;]*)|Firefox\/([^ ;]*)/);
-  var useLinks = parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 19;
+  var useLinks = parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18;
 
   var config = module.config();
   if (config && config.useLinks !== undefined)
