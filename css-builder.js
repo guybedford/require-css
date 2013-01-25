@@ -4,11 +4,12 @@ define(['require', './normalize'], function(req, normalize) {
   var baseUrl = baseParts.join('/');
 
   var nodePrint = function() {};
-  requirejs.tools.useLib(function(req) {
-    req(['node/print'], function(_nodePrint) {
-      nodePrint = _nodePrint;
+  if (requirejs.tools)
+    requirejs.tools.useLib(function(req) {
+      req(['node/print'], function(_nodePrint) {
+        nodePrint = _nodePrint;
+      });
     });
-  });
   
   var cssAPI = {};
   
@@ -201,7 +202,7 @@ define(['require', './normalize'], function(req, normalize) {
       //normalization is then performed from the absolute baseurl to the absolute pathname
       write(''
         + 'for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = function(f){f()} } \n'
-        + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
+        + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, req) { \n'
         + 'var pathname = window.location.pathname.split(\'/\'); \n'
         + 'pathname.pop(); \n'
         + 'pathname = pathname.join(\'/\') + \'/\'; \n'
