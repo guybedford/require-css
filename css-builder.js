@@ -3,8 +3,12 @@ define(['require', './normalize'], function(req, normalize) {
   baseParts.pop();
   var baseUrl = baseParts.join('/');
 
-
-  var nodePrint = requirejs.s.contexts.build.require('node/print');
+  var nodePrint = function() {};
+  requirejs.tools.useLib(function(req) {
+    req(['node/print'], function(_nodePrint) {
+      nodePrint = _nodePrint;
+    });
+  });
   
   var cssAPI = {};
   
