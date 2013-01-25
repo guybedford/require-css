@@ -1,5 +1,5 @@
 define(['require', './normalize'], function(req, normalize) {
-  var baseParts = req.toUrl('base_url').split('/');
+  var baseParts = req.toUrl('.').split('/');
   baseParts.pop();
   var baseUrl = baseParts.join('/');
 
@@ -201,7 +201,7 @@ define(['require', './normalize'], function(req, normalize) {
         + 'var pathname = window.location.pathname.split(\'/\'); \n'
         + 'pathname.pop(); \n'
         + 'pathname = pathname.join(\'/\') + \'/\'; \n'
-        + 'var baseParts = req.toUrl(\'base_url\').split(\'/\'); \n'
+        + 'var baseParts = req.toUrl(\'.\').split(\'/\'); \n'
         + 'baseParts.pop(); \n'
         + 'var baseUrl = baseParts.join(\'/\'); \n'
         + 'baseUrl = normalize.convertURIBase(baseUrl, pathname, \'/\'); \n'
