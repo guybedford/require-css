@@ -1,7 +1,7 @@
 require-css
 ===========
 
-Optimizable CSS requiring with RequireJS
+RequireJS CSS requiring and optimization.
 
 For LESS inclusion, use [require-less](https://github.com/guybedford/require-less), which behaves and builds the css exactly like this module apart from the preprocessing step.
 
