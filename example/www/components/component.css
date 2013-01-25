@@ -1,9 +1,5 @@
 /* component.css */
 @import 'test.css';
 body {
-  background-color: red;
   background-image: url(../test.jpg);
-}
-body {
-  background-color: red;
 }
