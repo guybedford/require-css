@@ -1,7 +1,12 @@
 define(['require', './normalize'], function(req, normalize) {
-  var baseParts = req.toUrl('base_url').split('/');
-  baseParts.pop();
-  var baseUrl = baseParts.join('/');
+
+  var nodePrint = function() {};
+  if (requirejs.tools)
+    requirejs.tools.useLib(function(req) {
+      req(['node/print'], function(_nodePrint) {
+        nodePrint = _nodePrint;
+      });
+    });
   
   var cssAPI = {};
   
@@ -11,15 +16,15 @@ define(['require', './normalize'], function(req, normalize) {
         var csso = require.nodeRequire('csso');
         var csslen = css.length;
         css = csso.justDoIt(css);
-        console.log('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
+        nodePrint('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
         return css;
       }
       catch(e) {
-        console.log('Compression module not installed. Use "npm install csso -g" to enable.');
+        nodePrint('Compression module not installed. Use "npm install csso -g" to enable.');
         return css;
       }
     }
-    console.log('Compression not supported outside of nodejs environments.');
+    nodePrint('Compression not supported outside of nodejs environments.');
     return css;
   }
   
@@ -84,8 +89,20 @@ define(['require', './normalize'], function(req, normalize) {
       .replace(/[\t]/g, "\\t")
       .replace(/[\r]/g, "\\r");
   }
+
+  var baseUrl;
   
   var loadCSS = function(cssId, parse) {
+    if (!baseUrl) {
+      var baseParts = req.toUrl('base_url').split('/');
+      baseParts.pop();
+      baseUrl = baseParts.join('/') + '/';
+      // NB temp fix for https://github.com/jrburke/r.js/issues/364
+      if (baseUrl.indexOf('www') != -1) {
+        baseUrl = baseUrl.replace('www', 'www-built');
+      }
+    }
+
     var fileUrl = cssId;
     
     if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
@@ -134,8 +151,6 @@ define(['require', './normalize'], function(req, normalize) {
   }
   
   cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 1, 1) == '!')
-      name = name.substr(0, name.length - 1);
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
     return normalize(name);
@@ -148,7 +163,7 @@ define(['require', './normalize'], function(req, normalize) {
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
-
+    
     _layerBuffer.push(loadCSS(moduleName + (extension ? '.' + extension : ''), parse));
     
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
@@ -167,8 +182,7 @@ define(['require', './normalize'], function(req, normalize) {
     var css = _layerBuffer.join('');
     
     if (separateCSS) {
-      if (typeof console != 'undefined' && console.log)
-        console.log('Writing CSS! file: ' + data.name + '\n');
+      nodePrint('Writing CSS! file: ' + data.name + '\n');
       
       //calculate the css output path for this layer
       var path = this.config.dir ? this.config.dir + data.name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css');
@@ -186,7 +200,9 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //derive the absolute path for the normalize helper
-      var normalizeName = normalize.convertURIBase('normalize.js', req.toUrl('./normalize.js'), require.toUrl('.'));
+      // NB temp fix for https://github.com/jrburke/r.js/issues/364
+      var normalizePath = req.toUrl('./normalize.js').replace('www', 'www-built');
+      var normalizeName = normalize.convertURIBase('normalize', normalizePath, baseUrl);
       
       //the code below overrides async require functionality to ensure instant layer css injection
       //it then runs normalization and injection
@@ -195,13 +211,13 @@ define(['require', './normalize'], function(req, normalize) {
       //normalization is then performed from the absolute baseurl to the absolute pathname
       write(''
         + 'for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = function(f){f()} } \n'
-        + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, require) { \n'
+        + 'require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, req) { \n'
         + 'var pathname = window.location.pathname.split(\'/\'); \n'
         + 'pathname.pop(); \n'
         + 'pathname = pathname.join(\'/\') + \'/\'; \n'
-        + 'var baseParts = require.toUrl(\'base_url\').split(\'/\'); \n'
+        + 'var baseParts = req.toUrl(\'base_url\').split(\'/\'); \n'
         + 'baseParts.pop(); \n'
-        + 'var baseUrl = baseParts.join(\'/\'); \n'
+        + 'var baseUrl = baseParts.join(\'/\') + \'/\'; \n'
         + 'baseUrl = normalize.convertURIBase(baseUrl, pathname, \'/\'); \n'
         + 'if (baseUrl.substr(0, 1) != \'/\') \n'
         + '  baseUrl = \'/\' + baseUrl; \n'
