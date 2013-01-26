@@ -2,13 +2,14 @@
  * css! loader plugin
  * Allows for loading stylesheets with the 'css!' syntax.
  *
- * External stylesheets supported.
- * 
- * '!' suffix skips load checking
- *
- *
- * in Chrome 19+, IE10+, Firefox 9+, <link> tags are used with onload support
+ * in Chrome 19+, IE10+, Firefox 9+, Safari 6+ <link> tags are used with onload support
  * in all other environments, <style> tags are used with injection to mimic onload support
+ *
+ * <link> tag can be enforced with the configuration useLinks, although support cannot be guaranteed.
+ *
+ * External stylesheets loaded with link tags, unless useLinks explicitly set to false assuming CORS support.
+ *
+ * Stylesheet parsers always use <style> injection even on external urls, which may cause origin issues.
  *
  */
 define(['./normalize', 'module'], function(normalize, module) {
@@ -17,8 +18,20 @@ define(['./normalize', 'module'], function(normalize, module) {
   
   var head = document.getElementsByTagName('head')[0];
 
-  var agentMatch = window.navigator.userAgent.match(/Chrome\/([^ \.]*)|MSIE ([^ ;]*)|Firefox\/([^ ;]*)/);
-  var useLinks = parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18;
+  var agentMatch = window.navigator.userAgent.match(/Chrome\/([^ \.]*)|MSIE ([^ ;]*)|Firefox\/([^ ;]*)|Version\/([\d\.]*) Safari\//);
+
+  var browserEngine = window.opera ? 'opera' : '';
+  if (agentMatch) {
+    if (agentMatch[4])
+      browserEngine = 'webkit'
+    if (agentMatch[3])
+      browserEngine = 'mozilla';
+    else if (agentMatch[2])
+      browserEngine = 'ie';
+    else if (agentMatch[1])
+      browserEngine = 'webkit';
+  }
+  var useLinks = browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18);
 
   var config = module.config();
   if (config && config.useLinks !== undefined)
@@ -79,7 +92,7 @@ define(['./normalize', 'module'], function(normalize, module) {
   
   cssAPI.pluginBuilder = './css-builder';
   
-  //<style> tag creation
+  //uses the <style> load method
   var stylesheet = document.createElement('style');
   stylesheet.type = 'text/css';
   head.appendChild(stylesheet);
@@ -93,6 +106,46 @@ define(['./normalize', 'module'], function(normalize, module) {
       stylesheet.appendChild(document.createTextNode(css));
     }
 
+
+  var webkitLoadCheck = function(link, callback) {
+    setTimeout(function() {
+      for (var i = 0; i < document.styleSheets.length; i++) {
+        var sheet = document.styleSheets[i];
+        //console.log(sheet.href);
+        if (sheet.href == link.href)
+          return callback();
+      }
+      webkitLoadCheck(link, callback);
+    }, 10);
+  }
+
+  var mozillaLoadCheck = function(link, callback) {
+    setTimeout(function() {
+      try {
+        link.sheet.cssRules;
+        return callback();
+      } catch(e) {}
+      mozillaLoadCheck(link, callback);
+    }, 10);
+  }
+
+  // uses the <link> load method
+  cssAPI.linkLoad = function(url, callback) {
+    var link = document.createElement('link');
+    link.type = 'text/css';
+    link.rel = 'stylesheet';
+    link.href = url;
+    head.appendChild(link);
+
+    if (browserEngine == 'webkit')
+      webkitLoadCheck(link, callback);
+    else if (browserEngine == 'mozilla')
+      mozillaLoadCheck(link, callback);
+    else
+      link.onload = callback;
+  }
+
+
   cssAPI.inspect = function() {
     if (stylesheet.styleSheet)
       return stylesheet.styleSheet.cssText;
@@ -100,22 +153,11 @@ define(['./normalize', 'module'], function(normalize, module) {
       return stylesheet.innerHTML;
   }
   
-  var instantCallbacks = {};
   cssAPI.normalize = function(name, normalize) {
-    var instantCallback;
-    if (name.substr(name.length - 1, 1) == '!')
-      instantCallback = true;
-    if (instantCallback)
-      name = name.substr(0, name.length - 1);
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
     
-    name = normalize(name);
-    
-    if (instantCallback)
-      instantCallbacks[name] = instantCallback;
-    
-    return name;
+    return normalize(name);
   }
 
   // NB add @media query support for media imports
@@ -175,10 +217,6 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
   
   cssAPI.load = function(cssId, req, load, config, parse) {
-    var instantCallback = instantCallbacks[cssId];
-    if (instantCallback)
-      delete instantCallbacks[cssId];
-    
     var fileUrl = cssId;
     
     if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
@@ -186,25 +224,13 @@ define(['./normalize', 'module'], function(normalize, module) {
     
     fileUrl = req.toUrl(fileUrl);
     
-    //external url -> add as a <link> tag to load. onload support not reliable so only provided when enabled.
-    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://' || (useLinks && !parse)) {
-      if (parse)
-        throw 'Cannot preprocess external css.';
-      var link = document.createElement('link');
-      link.type = 'text/css';
-      link.rel = 'stylesheet';
-      link.href = fileUrl;
-      head.appendChild(link);
-
-      if (useLinks)
-        link.onload = function() {
-          load(cssAPI);
-        }
-      else      
-        //only instant callback due to onload not being reliable
+    //external url -> add as a <link> tag to load
+    if (!parse && useLinks !== false && (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://' || useLinks)) {
+      cssAPI.linkLoad(fileUrl, function() {
         load(cssAPI);
+      });
     }
-    //internal url -> download and inject into <style> tag
+    //internal url or parsing -> inject into <style> tag
     else {
       loadCSS(fileUrl, function(css) {
         // run parsing last - since less is a CSS subset this works fine
@@ -213,12 +239,8 @@ define(['./normalize', 'module'], function(normalize, module) {
 
         cssAPI.inject(css);
 
-        if (!instantCallback)
-          load(cssAPI);
-      }, load.error);
-
-      if (instantCallback)
         load(cssAPI);
+      }, load.error);
     }
   }
   
