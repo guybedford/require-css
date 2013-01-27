@@ -1,8 +1,4 @@
 define(['require', './normalize'], function(req, normalize) {
-  var baseParts = req.toUrl('.').split('/');
-  baseParts.pop();
-  var baseUrl = baseParts.join('/');
-
   var nodePrint = function() {};
   if (requirejs.tools)
     requirejs.tools.useLib(function(req) {
@@ -92,8 +88,20 @@ define(['require', './normalize'], function(req, normalize) {
       .replace(/[\t]/g, "\\t")
       .replace(/[\r]/g, "\\r");
   }
+
+  var baseUrl;
   
   var loadCSS = function(cssId, parse) {
+    if (!baseUrl) {
+      var baseParts = req.toUrl('base_url').split('/');
+      baseParts.pop();
+      baseUrl = baseParts.join('/') + '/';
+      // NB temp fix for https://github.com/jrburke/r.js/issues/364
+      if (baseUrl.indexOf('www') != -1) {
+        baseUrl = baseUrl.replace('www', 'www-built');
+      }
+    }
+
     var fileUrl = cssId;
     
     if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
@@ -142,8 +150,6 @@ define(['require', './normalize'], function(req, normalize) {
   }
   
   cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 1, 1) == '!')
-      name = name.substr(0, name.length - 1);
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
     return normalize(name);
@@ -193,7 +199,9 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //derive the absolute path for the normalize helper
-      var normalizeName = normalize.convertURIBase('normalize', req.toUrl('./normalize.js'), require.toUrl('.'));
+      // NB temp fix for https://github.com/jrburke/r.js/issues/364
+      var normalizePath = req.toUrl('./normalize.js').replace('www', 'www-built');
+      var normalizeName = normalize.convertURIBase('normalize', normalizePath, baseUrl);
       
       //the code below overrides async require functionality to ensure instant layer css injection
       //it then runs normalization and injection
@@ -206,9 +214,9 @@ define(['require', './normalize'], function(req, normalize) {
         + 'var pathname = window.location.pathname.split(\'/\'); \n'
         + 'pathname.pop(); \n'
         + 'pathname = pathname.join(\'/\') + \'/\'; \n'
-        + 'var baseParts = req.toUrl(\'.\').split(\'/\'); \n'
+        + 'var baseParts = req.toUrl(\'base_url\').split(\'/\'); \n'
         + 'baseParts.pop(); \n'
-        + 'var baseUrl = baseParts.join(\'/\'); \n'
+        + 'var baseUrl = baseParts.join(\'/\') + \'/\'; \n'
         + 'baseUrl = normalize.convertURIBase(baseUrl, pathname, \'/\'); \n'
         + 'if (baseUrl.substr(0, 1) != \'/\') \n'
         + '  baseUrl = \'/\' + baseUrl; \n'
