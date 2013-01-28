@@ -144,14 +144,18 @@ define(['./normalize', 'module'], function(normalize, module) {
       webkitLoadCheck(link, callback);
       head.appendChild(link);
     }
-    else if (browserEngine == 'mozilla') {
+    // onload support only in firefox 18+
+    else if (browserEngine == 'mozilla' && agentMatch[3] < 18) {
       var style = document.createElement('style');
       style.textContent = '@import "' + url + '"';
       mozillaLoadCheck(style, callback);
       head.appendChild(style);
     }
-    else
+    else {
+      var link = createLink(url);
       link.onload = callback;
+      head.appendChild(link);
+    }
   }
 
 
