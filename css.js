@@ -119,28 +119,37 @@ define(['./normalize', 'module'], function(normalize, module) {
     }, 10);
   }
 
-  var mozillaLoadCheck = function(link, callback) {
+  var mozillaLoadCheck = function(style, callback) {
     setTimeout(function() {
       try {
-        link.sheet.cssRules;
+        style.sheet.cssRules;
         return callback();
-      } catch(e) {}
-      mozillaLoadCheck(link, callback);
+      } catch (e){}
+      mozillaLoadCheck();
     }, 10);
   }
 
   // uses the <link> load method
-  cssAPI.linkLoad = function(url, callback) {
+  var createLink = function(url) {
     var link = document.createElement('link');
     link.type = 'text/css';
     link.rel = 'stylesheet';
     link.href = url;
-    head.appendChild(link);
+    return link;
+  }
 
-    if (browserEngine == 'webkit')
+  cssAPI.linkLoad = function(url, callback) {
+    if (browserEngine == 'webkit') {
+      var link = createLink(url);
       webkitLoadCheck(link, callback);
-    else if (browserEngine == 'mozilla')
-      mozillaLoadCheck(link, callback);
+      head.appendChild(link);
+    }
+    else if (browserEngine == 'mozilla') {
+      var style = document.createElement('style');
+      style.textContent = '@import "' + url + '"';
+      mozillaLoadCheck(style, callback);
+      head.appendChild(style);
+    }
     else
       link.onload = callback;
   }
