@@ -125,7 +125,7 @@ define(['./normalize', 'module'], function(normalize, module) {
         style.sheet.cssRules;
         return callback();
       } catch (e){}
-      mozillaLoadCheck();
+      mozillaLoadCheck(style, callback);
     }, 10);
   }
 
