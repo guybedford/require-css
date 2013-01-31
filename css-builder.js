@@ -164,7 +164,7 @@ define(['require', './normalize'], function(req, normalize) {
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
   }
   
-  cssAPI.onLayerEnd = function(write, data) {
+  cssAPI.onLayerEnd = function(write, data, parser) {
     //separateCSS parameter set either globally or as a layer setting
     var separateCSS = false;
     if (cssAPI.config.separateCSS)
@@ -207,8 +207,8 @@ define(['require', './normalize'], function(req, normalize) {
       write(''
         + '(function(g) { \n'
         + '  g._cssWritten = g._cssWritten || []; \n'
-        + '  if (g._cssWritten.indexOf(\'' + data.name + '\') != -1) return; \n'
-        + '  g._cssWritten.push(\'' + data.name + '\');'
+        + '  if (g._cssWritten.indexOf(\'' + data.name + (parser ? '-' : '') + '\') != -1) return; \n'
+        + '  g._cssWritten.push(\'' + data.name + (parser ? '-' : '') + '\');'
         + '  for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = function(f){f()} } \n'
         + '  require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, req) { \n'
         + '    var pathname = window.location.pathname.split(\'/\'); \n'
