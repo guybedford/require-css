@@ -196,7 +196,7 @@ define(['require', './normalize'], function(req, normalize) {
       
       //derive the absolute path for the normalize helper
       // NB temp fix for https://github.com/jrburke/r.js/issues/364
-      var normalizePath = req.toUrl('./normalize.js').replace('www', 'www-built');
+      var normalizePath = req.toUrl('./normalize.js');
       var normalizeName = normalize.convertURIBase('normalize', normalizePath, baseUrl);
       
       //the code below overrides async require functionality to ensure instant layer css injection

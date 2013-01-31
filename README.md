@@ -5,8 +5,6 @@ RequireJS CSS requiring and optimization.
 
 For LESS inclusion, use [require-less](https://github.com/guybedford/require-less), which behaves and builds the css exactly like this module apart from the preprocessing step.
 
-_Note there is currently a bug with RequireJS 2.1.4 whole project builds. See the source code for a temporary fix. Bug report here - https://github.com/jrburke/r.js/issues/364_
-
 Overview
 --------
 
