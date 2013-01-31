@@ -180,7 +180,7 @@ define(['require', './normalize'], function(req, normalize) {
       nodePrint('Writing CSS! file: ' + data.name + '\n');
       
       //calculate the css output path for this layer
-      var path = this.config.dir ? this.config.dir + data.name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css');
+      var path = this.config.appDir ? this.config.baseUrl + data.name + '.css' : cssAPI.config.out.replace(/\.js$/, '.css');
       
       //renormalize the css to the output path
       var output = compress(normalize(css, baseUrl, path));
