@@ -96,10 +96,6 @@ define(['require', './normalize'], function(req, normalize) {
       var baseParts = req.toUrl('base_url').split('/');
       baseParts.pop();
       baseUrl = baseParts.join('/') + '/';
-      // NB temp fix for https://github.com/jrburke/r.js/issues/364
-      if (baseUrl.indexOf('www') != -1) {
-        baseUrl = baseUrl.replace('www', 'www-built');
-      }
     }
 
     var fileUrl = cssId;
