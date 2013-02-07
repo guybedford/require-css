@@ -21,6 +21,9 @@ define(['./normalize', 'module'], function(normalize, module) {
   var agentMatch = window.navigator.userAgent.match(/Chrome\/([^ \.]*)|MSIE ([^ ;]*)|Firefox\/([^ ;]*)|Version\/([\d\.]*) Safari\//);
 
   var browserEngine = window.opera ? 'opera' : '';
+
+  var useLinks;
+
   if (agentMatch) {
     if (agentMatch[4])
       browserEngine = 'webkit'
@@ -30,8 +33,8 @@ define(['./normalize', 'module'], function(normalize, module) {
       browserEngine = 'ie';
     else if (agentMatch[1])
       browserEngine = 'webkit';
+    useLinks = (browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18));
   }
-  var useLinks = (browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18)) || undefined;
 
   var config = module.config();
   if (config && config.useLinks !== undefined)
