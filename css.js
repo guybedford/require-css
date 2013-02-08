@@ -20,8 +20,16 @@ define(['./normalize', 'module'], function(normalize, module) {
 
   var agentMatch = window.navigator.userAgent.match(/Chrome\/([^ \.]*)|MSIE ([^ ;]*)|Firefox\/([^ ;]*)|Version\/([\d\.]*) Safari\//);
 
-  var browserEngine = window.opera ? 'opera' : '';
+  var useLinks, browserEngine;
+
+  if (window.opera) {
+    browserEngine = 'opera';
+    useLinks = true;
+  }
+
   if (agentMatch) {
+    useLinks = (browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18)) || undefined;
+
     if (agentMatch[4])
       browserEngine = 'webkit'
     if (agentMatch[3])
@@ -31,7 +39,6 @@ define(['./normalize', 'module'], function(normalize, module) {
     else if (agentMatch[1])
       browserEngine = 'webkit';
   }
-  var useLinks = (browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18)) || undefined;
 
   var config = module.config();
   if (config && config.useLinks !== undefined)
