@@ -152,7 +152,7 @@ define(['./normalize', 'module'], function(normalize, module) {
       head.appendChild(link);
     }
     // onload support only in firefox 18+
-    else if (browserEngine == 'mozilla' && agentMatch[3] < 18) {
+    else if (browserEngine == 'mozilla' && parseInt(agentMatch[3]) < 18) {
       var style = document.createElement('style');
       style.textContent = '@import "' + url + '"';
       mozillaLoadCheck(style, callback);
