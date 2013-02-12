@@ -118,7 +118,6 @@ define(['./normalize', 'module'], function(normalize, module) {
     setTimeout(function() {
       for (var i = 0; i < document.styleSheets.length; i++) {
         var sheet = document.styleSheets[i];
-        //console.log(sheet.href);
         if (sheet.href == link.href)
           return callback();
       }
@@ -243,9 +242,17 @@ define(['./normalize', 'module'], function(normalize, module) {
       fileUrl += '.css';
     
     fileUrl = req.toUrl(fileUrl);
+
+    // determine if it is the same domain or not
+    var sameDomain = true;
+    if (fileUrl.indexOf('\/\/') != -1) {
+      var baseDomain = window.location.href.split('/').splice(0, 3).join('/');
+      if (fileUrl.substr(0, baseDomain.length) != baseDomain)
+        sameDomain = false;
+    }
     
     //external url -> add as a <link> tag to load
-    if (!parse && useLinks !== false && (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://' || useLinks)) {
+    if (!parse && useLinks !== false && (!sameDomain || useLinks)) {
       cssAPI.linkLoad(fileUrl, function() {
         load(cssAPI);
       });
