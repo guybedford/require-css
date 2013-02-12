@@ -253,7 +253,7 @@ define(['./normalize', 'module'], function(normalize, module) {
 
     // determine if it is the same domain or not
     var sameDomain = true;
-    if (fileUrl.indexOf('\/\/') != -1) {
+    if (fileUrl.indexOf(':\/\/') != -1) {
       var baseDomain = window.location.href.split('/').splice(0, 3).join('/');
       if (fileUrl.substr(0, baseDomain.length) != baseDomain)
         sameDomain = false;
