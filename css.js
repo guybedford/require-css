@@ -145,21 +145,26 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
 
   cssAPI.linkLoad = function(url, callback) {
+    var timeout = setTimeout(callback, waitSeconds);
+    var _callback = function() {
+      clearTimeout(timeout);
+      callback();
+    }
     if (browserEngine == 'webkit') {
       var link = createLink(url);
-      webkitLoadCheck(link, callback);
+      webkitLoadCheck(link, _callback);
       head.appendChild(link);
     }
     // onload support only in firefox 18+
     else if (browserEngine == 'mozilla' && parseInt(agentMatch[3]) < 18) {
       var style = document.createElement('style');
       style.textContent = '@import "' + url + '"';
-      mozillaLoadCheck(style, callback);
+      mozillaLoadCheck(style, _callback);
       head.appendChild(style);
     }
     else {
       var link = createLink(url);
-      link.onload = callback;
+      link.onload = _callback
       head.appendChild(link);
     }
   }
@@ -235,7 +240,10 @@ define(['./normalize', 'module'], function(normalize, module) {
     }, errback);
   }
   
+  var waitSeconds;
   cssAPI.load = function(cssId, req, load, config, parse) {
+    waitSeconds = waitSeconds || config.waitSeconds || 7;
+
     var fileUrl = cssId;
     
     if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
