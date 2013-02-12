@@ -252,11 +252,12 @@ define(['./normalize', 'module'], function(normalize, module) {
     fileUrl = req.toUrl(fileUrl);
 
     // determine if it is the same domain or not
-    var sameDomain = true;
-    if (fileUrl.indexOf(':\/\/') != -1) {
-      var baseDomain = window.location.href.split('/').splice(0, 3).join('/');
-      if (fileUrl.substr(0, baseDomain.length) != baseDomain)
-        sameDomain = false;
+    var sameDomain = true,
+    domainCheck = /^(\w+:)?\/\/([^\/]+)/.exec(fileUrl);
+    if (domainCheck) {
+      sameDomain = domainCheck[2] === window.location.host;
+      if (domainCheck[1])
+        sameDomain &= domainCheck[1] === window.location.protocol;
     }
     
     //external url -> add as a <link> tag to load
