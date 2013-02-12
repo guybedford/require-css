@@ -28,8 +28,6 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
 
   if (agentMatch) {
-    useLinks = (browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18)) || undefined;
-
     if (agentMatch[4])
       browserEngine = 'webkit'
     if (agentMatch[3])
@@ -38,6 +36,8 @@ define(['./normalize', 'module'], function(normalize, module) {
       browserEngine = 'ie';
     else if (agentMatch[1])
       browserEngine = 'webkit';
+
+    useLinks = (browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18)) || undefined;
   }
 
   var config = module.config();
@@ -145,7 +145,7 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
 
   cssAPI.linkLoad = function(url, callback) {
-    var timeout = setTimeout(callback, waitSeconds);
+    var timeout = setTimeout(callback, waitSeconds * 1000);
     var _callback = function() {
       clearTimeout(timeout);
       callback();

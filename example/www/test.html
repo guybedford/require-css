@@ -20,14 +20,6 @@
     document.body.appendChild(div);
     console.log(div.childNodes[0].offsetWidth);
   });
-  setTimeout(function() {
-    require(['popup'], function(popupHTML) {
-      var div = document.createElement('div');
-      div.innerHTML = popupHTML;
-      document.body.appendChild(div);
-      console.log(div.childNodes[0].offsetWidth);
-    });
-  }, 1000); 
 </script>
 
 <body>
