@@ -164,7 +164,7 @@ define(['./normalize', 'module'], function(normalize, module) {
     }
     else {
       var link = createLink(url);
-      link.onload = _callback
+      link.onload = _callback;
       head.appendChild(link);
     }
   }
