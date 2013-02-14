@@ -3,6 +3,8 @@ require-css
 
 RequireJS CSS requiring and optimization.
 
+Can be used to encapsulate widgets as AMD modules for rendering with a renderer such as [ZestJS](http://zestjs.org).
+
 For LESS inclusion, use [require-less](https://github.com/guybedford/require-less), which behaves and builds the css exactly like this module apart from the preprocessing step.
 
 Overview
