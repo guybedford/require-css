@@ -145,7 +145,7 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
 
   cssAPI.linkLoad = function(url, callback) {
-    var timeout = setTimeout(callback, waitSeconds * 1000);
+    var timeout = setTimeout(callback, waitSeconds * 1000 - 100);
     var _callback = function() {
       clearTimeout(timeout);
       callback();
