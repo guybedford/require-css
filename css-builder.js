@@ -220,6 +220,8 @@ define(['require', './normalize'], function(req, normalize) {
         + '    baseUrl = normalize.convertURIBase(baseUrl, pathname, \'/\'); \n'
         + '    if (baseUrl.substr(0, 1) != \'/\') \n'
         + '      baseUrl = \'/\' + baseUrl; \n'
+        + '    if (baseUrl.substr(baseUrl.length - 1, 1) != \'/\') \n'
+        + '      baseUrl = baseUrl + \'/\'; \n'
         + '    css.inject(normalize(\'' + css + '\', baseUrl, pathname)); \n'
         + '  }); \n'
         + '  for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = requirejs.nextTick; } \n'
