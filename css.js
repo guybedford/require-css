@@ -211,7 +211,7 @@ define(['./normalize', 'module'], function(normalize, module) {
         var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
 
         // add less extension if necessary
-        if (importUrl.indexOf('.') == -1)
+        if (importUrl.indexOf('.less') === -1)
           importUrl += '.less';
 
         importUrls.push(importUrl);
