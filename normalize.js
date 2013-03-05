@@ -41,6 +41,8 @@ define(['require', 'module'], function(require, module) {
 
   // given a relative URI, and two absolute base URIs, convert it from one base to another
   function convertURIBase(uri, fromBase, toBase) {
+    if(uri.indexOf("data:") === 0)
+      return uri;
     uri = removeDoubleSlashes(uri);
     // absolute urls are left in tact
     if (uri.match(/^\/|([^\:\/]*:)/))
