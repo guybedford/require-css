@@ -39,13 +39,12 @@ define(['./normalize', 'module'], function(normalize, module) {
   var supportsLinks = false;
 
   if (engine[1]) {
-    // engine = 'trident';
+    engine = 'trident';
     supportsLinks = parseInt(engine[1]) >= 6;
   }
   else if (engine[2]) {
     engine = 'webkit';
-    linkHack = true;
-    // webkit calls onload before styles have fully applied so cant check dimensions -> still hacking
+    supportsLinks = true;
   }
   else if (engine[3]) {
     // engine = 'opera';
@@ -53,7 +52,8 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
   else if (engine[4]) {
     engine = 'gecko';
-    supportsLinks = parseInt(engine[4]) >= 18;
+    //supportsLinks = parseInt(engine[4]) >= 18;
+    supportsLinks = true;
   }
   
   var config = module.config();
@@ -313,6 +313,7 @@ define(['./normalize', 'module'], function(normalize, module) {
     
     // links
     if (!parse && (supportsLinks || enforceLinks || !sameDomain)) {
+      alert('using links');
       cssAPI.linkLoad(fileUrl, function() {
         load(cssAPI);
       });
