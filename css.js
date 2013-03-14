@@ -12,38 +12,53 @@
  * Stylesheet parsers always use <style> injection even on external urls, which may cause origin issues.
  *
  */
+
+
+/*
+
+Improvements
+- further test webkit load callbacks to understand style delay
+- integrate IE6 - 9 hacks from curl (https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js)
+- comprehensive device testing, ultimately removing style injection fallback
+
+Credit to B Cavalier & J Hann for the amazing IE 6 - 9 hack.
+
+Sources that helped along the way:
+- https://developer.mozilla.org/en-US/docs/Browser_detection_using_the_user_agent
+- http://www.phpied.com/when-is-a-stylesheet-really-loaded/
+- https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
+
+*/
 define(['./normalize', 'module'], function(normalize, module) {
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
   
   var head = document.getElementsByTagName('head')[0];
 
-  var agentMatch = window.navigator.userAgent.match(/Chrome\/([^ \.]*)|MSIE ([^ ;]*)|Firefox\/([^ ;]*)|Version\/([\d\.]*) Safari\//);
+  var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit\/([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)/);
+  var supportsLinks = false;
 
-  var useLinks, browserEngine;
-
-  if (window.opera) {
-    browserEngine = 'opera';
-    useLinks = true;
+  if (engine[1]) {
+    // engine = 'trident';
+    supportsLinks = parseInt(engine[1]) >= 6;
   }
-
-  if (agentMatch) {
-    if (agentMatch[4])
-      browserEngine = 'webkit'
-    if (agentMatch[3])
-      browserEngine = 'mozilla';
-    else if (agentMatch[2])
-      browserEngine = 'ie';
-    else if (agentMatch[1])
-      browserEngine = 'webkit';
-
-    useLinks = (browserEngine && (parseInt(agentMatch[4]) > 5 || parseInt(agentMatch[3]) > 8 || parseInt(agentMatch[2]) > 9 || parseInt(agentMatch[1]) > 18)) || undefined;
+  else if (engine[2]) {
+    engine = 'webkit';
+    linkHack = true;
+    // webkit calls onload before styles have fully applied so cant check dimensions -> still hacking
   }
-
-  var config = module.config();
-  if (config && config.useLinks !== undefined)
-    useLinks = config.useLinks;
+  else if (engine[3]) {
+    // engine = 'opera';
+    supportsLinks = true;
+  }
+  else if (engine[4]) {
+    engine = 'gecko';
+    supportsLinks = parseInt(engine[4]) >= 18;
+  }
   
+  var config = module.config();
+  var enforceLinks = config && config.useLinks;
+
   /* XHR code - copied from RequireJS text plugin */
   var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
   var fileCache = {};
@@ -113,7 +128,6 @@ define(['./normalize', 'module'], function(normalize, module) {
       stylesheet.appendChild(document.createTextNode(css));
     }
 
-
   var webkitLoadCheck = function(link, callback) {
     setTimeout(function() {
       for (var i = 0; i < document.styleSheets.length; i++) {
@@ -135,6 +149,40 @@ define(['./normalize', 'module'], function(normalize, module) {
     }, 10);
   }
 
+  // ie link detection, as adapted from https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
+  if (engine == 'trident' && !supportsLinks) {
+    var ieStyles = [],
+      ieQueue = [],
+      ieStyleCnt = 0;
+    var ieLoad = function(url, callback) {
+      var style;
+      ieQueue.push({
+        url: url,
+        cb: callback
+      });
+      style = ieStyles.shift();
+      if (!style && ieStyleCnt++ < 12) {
+        style = document.createElement('style');
+        head.appendChild(style);
+      }
+      ieLoadNextImport(style);
+    }
+    var ieLoadNextImport = function(style) {
+      var curImport = ieQueue.shift();
+      if (!curImport) {
+        style.onload = noop;
+        ieStyles.push(style);
+        return;  
+      }
+      style.onload = function() {
+        curImport.cb(curImport.ss);
+        ieLoadNextImport(style);
+      };
+      var curSheet = style.styleSheet;
+      curImport.ss = curSheet.imports[curSheet.addImport(curImport.url)];
+    }
+  }
+
   // uses the <link> load method
   var createLink = function(url) {
     var link = document.createElement('link');
@@ -144,23 +192,30 @@ define(['./normalize', 'module'], function(normalize, module) {
     return link;
   }
 
+  var noop = function(){}
+
   cssAPI.linkLoad = function(url, callback) {
     var timeout = setTimeout(callback, waitSeconds * 1000 - 100);
     var _callback = function() {
       clearTimeout(timeout);
-      callback();
+      if (link)
+        link.onload = noop;
+      // for style querying, a short delay still seems necessary
+      setTimeout(callback, 7);
     }
-    if (browserEngine == 'webkit') {
+    if (engine == 'webkit' && !supportsLinks) {
       var link = createLink(url);
       webkitLoadCheck(link, _callback);
       head.appendChild(link);
     }
-    // onload support only in firefox 18+
-    else if (browserEngine == 'mozilla' && parseInt(agentMatch[3]) < 18) {
+    else if (engine == 'gecko' && !supportsLinks) {
       var style = document.createElement('style');
       style.textContent = '@import "' + url + '"';
       mozillaLoadCheck(style, _callback);
       head.appendChild(style);
+    }
+    else if (engine == 'trident' && !supportsLinks) {
+      ieLoad(url, callback);
     }
     else {
       var link = createLink(url);
@@ -210,10 +265,6 @@ define(['./normalize', 'module'], function(normalize, module) {
       while (match = importRegEx.exec(css)) {
         var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
 
-        // add less extension if necessary
-        if (importUrl.indexOf('.less') === -1)
-          importUrl += '.less';
-
         importUrls.push(importUrl);
         importIndex.push(importRegEx.lastIndex - match[0].length);
         importLength.push(match[0].length);
@@ -260,14 +311,16 @@ define(['./normalize', 'module'], function(normalize, module) {
         sameDomain &= domainCheck[1] === window.location.protocol;
     }
     
-    //external url -> add as a <link> tag to load
-    if (!parse && useLinks !== false && (!sameDomain || useLinks)) {
+    // links
+    if (!parse && (supportsLinks || enforceLinks || !sameDomain)) {
       cssAPI.linkLoad(fileUrl, function() {
         load(cssAPI);
       });
     }
-    //internal url or parsing -> inject into <style> tag
+    // style injection (always used for parsers)
     else {
+      if (fileUrl.indexOf('.less') === -1 && parse)
+        fileUrl += '.less';
       loadCSS(fileUrl, function(css) {
         // run parsing last - since less is a CSS subset this works fine
         if (parse)
