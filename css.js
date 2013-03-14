@@ -1,42 +1,47 @@
 /*
- * css! loader plugin
- * Allows for loading stylesheets with the 'css!' syntax.
+ * Require-CSS RequireJS css! loader plugin
+ * Guy Bedford 2013
+ * MIT
+ */
+
+/*
  *
- * Fully supports cross origin CSS loading.
- * 
- * Still to test:
- * iOS5
+ * Usage:
+ *  require(['css!./mycssFile']);
+ *
+ * Typically leave out the '.css' extension.
+ *
+ * - Fully supports cross origin CSS loading
+ * - Works with builds
+ *
+ * Tested and working in (up to latest versions as of March 2013):
  * Android
- * Other devices
- *
- * Tested and working in (latest versions as of March 2013):
- * iOS6
- * IE6 - IE10
+ * iOS 6
+ * IE 6 - 10
  * Chome 3 - 26
  * Firefox 3.5 - 19
  * Opera 10 - 12
  * 
- * Not working in:
- * Firefox 3.0
- * Chrome 2.0, 1.0
- * 
- * Thanks to browserling.com for virtual testing environment
+ * browserling.com used for virtual testing environment
  *
  * Credit to B Cavalier & J Hann for the elegant IE 6 - 9 hack.
  * 
- * Other sources that helped along the way:
+ * Sources that helped along the way:
  * - https://developer.mozilla.org/en-US/docs/Browser_detection_using_the_user_agent
  * - http://www.phpied.com/when-is-a-stylesheet-really-loaded/
  * - https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
  *
+ * Guy Bedford 2013
+ * MIT license
+ *
  */
 
-define(['./normalize', 'module'], function(normalize, module) {
+define(['./normalize'], function(normalize) {
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
 
   // set to true to enable test prompts for device testing
-  var testing = false;
+  var testing = true;
   
   var head = document.getElementsByTagName('head')[0];
 
@@ -45,10 +50,11 @@ define(['./normalize', 'module'], function(normalize, module) {
 
   if (!engine) {}
   else if (engine[1] || engine[7]) {
-    hackLinks = (parseInt(engine[1]) < 6) || (parseInt(engine[7]) <= 9);
+    hackLinks = parseInt(engine[1]) < 6 || parseInt(engine[7]) <= 9;
     engine = 'trident';
   }
   else if (engine[2]) {
+    // unfortunately style querying still doesnt work with onload callback in webkit
     hackLinks = true;
     engine = 'webkit';
   }
@@ -61,75 +67,36 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
   else if (testing)
     alert('Engine detection failed');
-
-  /* XHR code - copied from RequireJS text plugin */
-  var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
-  var fileCache = {};
-  var get = function(url, callback, errback) {
-    if (fileCache[url]) {
-      callback(fileCache[url]);
-      return;
-    }
-
-    var xhr, i, progId;
-    if (typeof XMLHttpRequest !== 'undefined')
-      xhr = new XMLHttpRequest();
-    else if (typeof ActiveXObject !== 'undefined')
-      for (i = 0; i < 3; i += 1) {
-        progId = progIds[i];
-        try {
-          xhr = new ActiveXObject(progId);
-        }
-        catch (e) {}
-  
-        if (xhr) {
-          progIds = [progId];  // so faster next time
-          break;
-        }
-      }
-    
-    xhr.open('GET', url, requirejs.inlineRequire ? false : true);
-  
-    xhr.onreadystatechange = function (evt) {
-      var status, err;
-      //Do not explicitly handle errors, those should be
-      //visible via console output in the browser.
-      if (xhr.readyState === 4) {
-        status = xhr.status;
-        if (status > 399 && status < 600) {
-          //An http 4xx or 5xx error. Signal an error.
-          err = new Error(url + ' HTTP status: ' + status);
-          err.xhr = xhr;
-          errback(err);
-        }
-        else {
-          fileCache[url] = xhr.responseText;
-          callback(xhr.responseText);
-        }
-      }
-    };
-    
-    xhr.send(null);
-  }
   
   //main api object
   var cssAPI = {};
   
+  // for builds, store css for injection
+  cssAPI.buffer = {};
   cssAPI.pluginBuilder = './css-builder';
-  
-  //uses the <style> load method
-  var stylesheet = document.createElement('style');
-  stylesheet.type = 'text/css';
-  head.appendChild(stylesheet);
-  
-  if (stylesheet.styleSheet)
-    cssAPI.inject = function(css) {
-      stylesheet.styleSheet.cssText += css;
-    }
-  else
-    cssAPI.inject = function(css) {
-      stylesheet.appendChild(document.createTextNode(css));
-    }
+
+  // used by layer builds to register their css buffers
+  var curBuffer = [];
+  cssAPI.addBuffer = function(cssId) {
+    curBuffer.push(cssId);
+  }
+  cssAPI.setBuffer = function(css) {
+    var pathname = window.location.pathname.split('/');
+    pathname.pop();
+    pathname = pathname.join('/') + '/';
+
+    var baseParts = require.toUrl('base_url').split('/');
+    baseParts.pop();
+    var baseUrl = baseParts.join('/') + '/';
+    baseUrl = normalize.convertURIBase(baseUrl, pathname, '/');
+    if (baseUrl.substr(0, 1) != '/')
+      baseUrl = '/' + baseUrl;
+    if (baseUrl.substr(baseUrl.length - 1, 1) != '/')
+      baseUrl = baseUrl + '/';
+
+    cssAPI.buffer[curBuffer.toString()] = normalize(css, baseUrl, pathname);
+    curBuffer = [];
+  }
 
   var webkitLoadCheck = function(link, callback) {
     setTimeout(function() {
@@ -232,21 +199,68 @@ define(['./normalize', 'module'], function(normalize, module) {
     }
   }
 
+  /* injection api */
+  var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
+  var fileCache = {};
+  var get = function(url, callback, errback) {
+    if (fileCache[url]) {
+      callback(fileCache[url]);
+      return;
+    }
 
-  cssAPI.inspect = function() {
-    if (stylesheet.styleSheet)
-      return stylesheet.styleSheet.cssText;
-    else if (stylesheet.innerHTML)
-      return stylesheet.innerHTML;
-  }
+    var xhr, i, progId;
+    if (typeof XMLHttpRequest !== 'undefined')
+      xhr = new XMLHttpRequest();
+    else if (typeof ActiveXObject !== 'undefined')
+      for (i = 0; i < 3; i += 1) {
+        progId = progIds[i];
+        try {
+          xhr = new ActiveXObject(progId);
+        }
+        catch (e) {}
   
-  cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 4, 4) == '.css')
-      name = name.substr(0, name.length - 4);
+        if (xhr) {
+          progIds = [progId];  // so faster next time
+          break;
+        }
+      }
     
-    return normalize(name);
+    xhr.open('GET', url, requirejs.inlineRequire ? false : true);
+  
+    xhr.onreadystatechange = function (evt) {
+      var status, err;
+      //Do not explicitly handle errors, those should be
+      //visible via console output in the browser.
+      if (xhr.readyState === 4) {
+        status = xhr.status;
+        if (status > 399 && status < 600) {
+          //An http 4xx or 5xx error. Signal an error.
+          err = new Error(url + ' HTTP status: ' + status);
+          err.xhr = xhr;
+          errback(err);
+        }
+        else {
+          fileCache[url] = xhr.responseText;
+          callback(xhr.responseText);
+        }
+      }
+    };
+    
+    xhr.send(null);
   }
-
+  //uses the <style> load method
+  var stylesheet = document.createElement('style');
+  stylesheet.type = 'text/css';
+  head.appendChild(stylesheet);
+  
+  if (stylesheet.styleSheet)
+    cssAPI.inject = function(css) {
+      stylesheet.styleSheet.cssText += css;
+    }
+  else
+    cssAPI.inject = function(css) {
+      stylesheet.appendChild(document.createTextNode(css));
+    }
   // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
 
@@ -298,52 +312,66 @@ define(['./normalize', 'module'], function(normalize, module) {
         callback(css);
     }, errback);
   }
+
+  
+  cssAPI.normalize = function(name, normalize) {
+    if (name.substr(name.length - 4, 4) == '.css')
+      name = name.substr(0, name.length - 4);
+    
+    return normalize(name);
+  }
   
   var waitSeconds;
   var alerted = false;
   cssAPI.load = function(cssId, req, load, config, parse) {
+    
+    // if in the built buffer do injection
+    for (var b in cssAPI.buffer) {
+      if (b.split(',').indexOf(cssId) != -1) {
+        var bufferVal = cssAPI.buffer[b];
+        if (bufferVal !== true) {
+          cssAPI.inject(bufferVal);
+          cssAPI.buffer[b] = true;
+        }
+        return setTimeout(load, 7);
+      }
+    }
+
     waitSeconds = waitSeconds || config.waitSeconds || 7;
 
-    var fileUrl = cssId;
-    
-    if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
-      fileUrl += '.css';
+    var fileUrl = cssId + '.css';
     
     fileUrl = req.toUrl(fileUrl);
-
-    // determine if it is the same domain or not
-    var sameDomain = true,
-    domainCheck = /^(\w+:)?\/\/([^\/]+)/.exec(fileUrl);
-    if (domainCheck) {
-      sameDomain = domainCheck[2] === window.location.host;
-      if (domainCheck[1])
-        sameDomain &= domainCheck[1] === window.location.protocol;
-    }
     
-    // links
-    if (!parse) {
-      if (!alerted && testing)
-        alert(hackLinks ? 'hacking links' : 'not hacking');
+    if (!alerted && testing) {
+      alert(hackLinks ? 'hacking links' : 'not hacking');
       alerted = true;
-      cssAPI.linkLoad(fileUrl, function() {
-        load(cssAPI);
-      });
     }
-    // style injection (always used for parsers)
+
+    if (!parse) {
+      cssAPI.linkLoad(fileUrl, load);
+    }
     else {
-      if (fileUrl.indexOf('.less') === -1 && parse)
+      if (fileUrl.indexOf('.less') === -1)
         fileUrl += '.less';
       loadCSS(fileUrl, function(css) {
-        // run parsing last - since less is a CSS subset this works fine
+        // run parsing after normalization - since less is a CSS subset this works fine
         if (parse)
           css = parse(css);
 
         cssAPI.inject(css);
-
-        load(cssAPI);
-      }, load.error);
+        setTimeout(load, 7);
+      });
     }
   }
+
+  if (testing)
+    cssAPI.inspect = function() {
+      if (stylesheet.styleSheet)
+        return stylesheet.styleSheet.cssText;
+      else if (stylesheet.innerHTML)
+        return stylesheet.innerHTML;
+    }
   
   return cssAPI;
 });
