@@ -191,19 +191,8 @@ define(['require', './normalize'], function(req, normalize) {
   
   //list of cssIds included in this layer
   var _layerBuffer = [];
-  
-  var firstWrite = true;
 
   cssAPI.write = function(pluginName, moduleName, write, extension, parse) {
-    if (firstWrite == true) {
-      // ensure requirecss loaded
-      write(''
-        + 'for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = function(f){f()} } \n'
-        + 'require([\'css\']); \n'
-        + 'for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = requirejs.nextTick; } \n'
-      );
-      firstWrite = false;
-    }
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
@@ -218,7 +207,7 @@ define(['require', './normalize'], function(req, normalize) {
     if (separateCSS)
       write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
     else
-      write("require('css').addBuffer('" +  moduleName + (parse ? '.less' : '.css') + "');");
+      write("require(['css'], function(css) { css.addBuffer('" +  moduleName + (parse ? '.less' : '.css') + "'); });");
   }
   
   cssAPI.onLayerEnd = function(write, data, parser) {
@@ -253,7 +242,7 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //the code below overrides async require functionality to ensure instant buffer injection
-      write("require('css').setBuffer('" + css + "');");
+      write("require(['css'], function(css) { css.setBuffer('" + css + "'); });");
     }
     
     //clear layer buffer for next layer

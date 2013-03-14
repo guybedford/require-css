@@ -327,7 +327,7 @@ define(['./normalize'], function(normalize) {
     
     waitSeconds = waitSeconds || config.waitSeconds || 7;
 
-    var fileUrl = cssId + '.css';
+    var fileUrl = cssId + (parse ? '.less' : '.css');
 
     // if in the built buffer do injection
     for (var b in cssAPI.buffer) {
@@ -352,8 +352,6 @@ define(['./normalize'], function(normalize) {
       cssAPI.linkLoad(fileUrl, load);
     }
     else {
-      if (fileUrl.indexOf('.less') === -1)
-        fileUrl += '.less';
       loadCSS(fileUrl, function(css) {
         // run parsing after normalization - since less is a CSS subset this works fine
         if (parse)
