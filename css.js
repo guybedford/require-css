@@ -292,6 +292,7 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
   
   var waitSeconds;
+  var alerted = false;
   cssAPI.load = function(cssId, req, load, config, parse) {
     waitSeconds = waitSeconds || config.waitSeconds || 7;
 
@@ -313,7 +314,9 @@ define(['./normalize', 'module'], function(normalize, module) {
     
     // links
     if (!parse && (supportsLinks || enforceLinks || !sameDomain)) {
-      alert('using links');
+      if (!alerted)
+        alert('using links');
+      alerted = true;
       cssAPI.linkLoad(fileUrl, function() {
         load(cssAPI);
       });
