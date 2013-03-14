@@ -35,12 +35,13 @@ define(['./normalize', 'module'], function(normalize, module) {
   
   var head = document.getElementsByTagName('head')[0];
 
-  var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit\/([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)/);
+  var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit\/([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)|MSIE\s([^ ;]*)/);
   var hackLinks = false;
 
-  if (engine[1]) {
+  if (!engine) {}
+  else if (engine[1] || engine[7]) {
     engine = 'trident';
-    hackLinks = parseInt(engine[1]) < 6;
+    hackLinks = parseInt(engine[1]) < 6 || parseInt(engine[7]) <= 9;
   }
   else if (engine[2]) {
     engine = 'webkit';
