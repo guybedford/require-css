@@ -36,28 +36,23 @@ define(['./normalize', 'module'], function(normalize, module) {
   var head = document.getElementsByTagName('head')[0];
 
   var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit\/([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)/);
-  var supportsLinks = false;
+  var hackLinks = false;
 
   if (engine[1]) {
     engine = 'trident';
-    supportsLinks = parseInt(engine[1]) >= 6;
+    hackLinks = parseInt(engine[1]) < 6;
   }
   else if (engine[2]) {
     engine = 'webkit';
+    hackLinks = true;
   }
   else if (engine[3]) {
     // engine = 'opera';
-    supportsLinks = true;
   }
   else if (engine[4]) {
     engine = 'gecko';
-    supportsLinks = parseInt(engine[4]) >= 18;
+    hackLinks = parseInt(engine[4]) < 18;
   }
-  else
-    supportsLinks = true;
-  
-  var config = module.config();
-  var enforceLinks = config && config.useLinks;
 
   /* XHR code - copied from RequireJS text plugin */
   var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
@@ -150,7 +145,7 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
 
   // ie link detection, as adapted from https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
-  if (engine == 'trident' && !supportsLinks) {
+  if (engine == 'trident' && hackLinks) {
     var ieStyles = [],
       ieQueue = [],
       ieStyleCnt = 0;
@@ -203,24 +198,26 @@ define(['./normalize', 'module'], function(normalize, module) {
       // for style querying, a short delay still seems necessary
       setTimeout(callback, 7);
     }
-    if (engine == 'webkit' && !supportsLinks) {
-      var link = createLink(url);
-      webkitLoadCheck(link, _callback);
-      head.appendChild(link);
-    }
-    else if (engine == 'gecko' && !supportsLinks) {
-      var style = document.createElement('style');
-      style.textContent = '@import "' + url + '"';
-      mozillaLoadCheck(style, _callback);
-      head.appendChild(style);
-    }
-    else if (engine == 'trident' && !supportsLinks) {
-      ieLoad(url, callback);
-    }
-    else {
+    if (!hackLinks) {
       var link = createLink(url);
       link.onload = _callback;
       head.appendChild(link);
+    }
+    // hacks
+    else {
+      if (engine == 'webkit') {
+        var link = createLink(url);
+        webkitLoadCheck(link, _callback);
+        head.appendChild(link);
+      }
+      else if (engine == 'gecko') {
+        var style = document.createElement('style');
+        style.textContent = '@import "' + url + '"';
+        mozillaLoadCheck(style, _callback);
+        head.appendChild(style);
+      }
+      else if (engine == 'trident')
+        ieLoad(url, callback);
     }
   }
 
@@ -313,7 +310,7 @@ define(['./normalize', 'module'], function(normalize, module) {
     }
     
     // links
-    if (!parse && (supportsLinks || enforceLinks || !sameDomain)) {
+    if (!parse) {
       if (!alerted)
         alert('using links');
       alerted = true;
