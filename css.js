@@ -44,7 +44,6 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
   else if (engine[2]) {
     engine = 'webkit';
-    supportsLinks = true;
   }
   else if (engine[3]) {
     // engine = 'opera';
@@ -52,9 +51,10 @@ define(['./normalize', 'module'], function(normalize, module) {
   }
   else if (engine[4]) {
     engine = 'gecko';
-    //supportsLinks = parseInt(engine[4]) >= 18;
-    supportsLinks = true;
+    supportsLinks = parseInt(engine[4]) >= 18;
   }
+  else
+    supportsLinks = true;
   
   var config = module.config();
   var enforceLinks = config && config.useLinks;
