@@ -325,9 +325,13 @@ define(['./normalize'], function(normalize) {
   var alerted = false;
   cssAPI.load = function(cssId, req, load, config, parse) {
     
+    waitSeconds = waitSeconds || config.waitSeconds || 7;
+
+    var fileUrl = cssId + '.css';
+
     // if in the built buffer do injection
     for (var b in cssAPI.buffer) {
-      if (b.split(',').indexOf(cssId) != -1) {
+      if (b.split(',').indexOf(fileUrl) != -1) {
         var bufferVal = cssAPI.buffer[b];
         if (bufferVal !== true) {
           cssAPI.inject(bufferVal);
@@ -337,10 +341,6 @@ define(['./normalize'], function(normalize) {
       }
     }
 
-    waitSeconds = waitSeconds || config.waitSeconds || 7;
-
-    var fileUrl = cssId + '.css';
-    
     fileUrl = req.toUrl(fileUrl);
     
     if (!alerted && testing) {

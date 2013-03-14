@@ -218,7 +218,7 @@ define(['require', './normalize'], function(req, normalize) {
     if (separateCSS)
       write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
     else
-      write("require('css').addBuffer('" +  moduleName + "');");
+      write("require('css').addBuffer('" +  moduleName + (parse ? '.less' : '.css') + "');");
   }
   
   cssAPI.onLayerEnd = function(write, data, parser) {
