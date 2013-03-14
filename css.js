@@ -210,10 +210,6 @@ define(['./normalize', 'module'], function(normalize, module) {
       while (match = importRegEx.exec(css)) {
         var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
 
-        // add less extension if necessary
-        if (importUrl.indexOf('.less') === -1)
-          importUrl += '.less';
-
         importUrls.push(importUrl);
         importIndex.push(importRegEx.lastIndex - match[0].length);
         importLength.push(match[0].length);
@@ -268,6 +264,8 @@ define(['./normalize', 'module'], function(normalize, module) {
     }
     //internal url or parsing -> inject into <style> tag
     else {
+      if (fileUrl.indexOf('.less') === -1 && parse)
+        fileUrl += '.less';
       loadCSS(fileUrl, function(css) {
         // run parsing last - since less is a CSS subset this works fine
         if (parse)
