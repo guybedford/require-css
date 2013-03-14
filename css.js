@@ -313,7 +313,7 @@ define(['./normalize', 'module'], function(normalize, module) {
     // links
     if (!parse) {
       if (!alerted)
-        alert('using links');
+        alert(hackLinks ? 'hacking links' : 'not hacking');
       alerted = true;
       cssAPI.linkLoad(fileUrl, function() {
         load(cssAPI);
