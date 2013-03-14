@@ -41,7 +41,7 @@ define(['./normalize'], function(normalize) {
     return { load: function(n, r, load){ load() } };
 
   // set to true to enable test prompts for device testing
-  var testing = true;
+  var testing = false;
   
   var head = document.getElementsByTagName('head')[0];
 
