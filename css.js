@@ -2,36 +2,41 @@
  * css! loader plugin
  * Allows for loading stylesheets with the 'css!' syntax.
  *
- * in Chrome 19+, IE10+, Firefox 9+, Safari 6+ <link> tags are used with onload support
- * in all other environments, <style> tags are used with injection to mimic onload support
+ * Fully supports cross origin CSS loading.
+ * 
+ * Still to test:
+ * iOS5
+ * Android
+ * Other devices
  *
- * <link> tag can be enforced with the configuration useLinks, although support cannot be guaranteed.
+ * Tested and working in (latest versions as of March 2013):
+ * iOS6
+ * IE6 - IE10
+ * Chome 3 - 26
+ * Firefox 3.5 - 19
+ * Opera 10 - 12
+ * 
+ * Not working in:
+ * Firefox 3.0
+ * Chrome 2.0, 1.0
+ * 
+ * Thanks to browserling.com for virtual testing environment
  *
- * External stylesheets loaded with link tags, unless useLinks explicitly set to false assuming CORS support.
- *
- * Stylesheet parsers always use <style> injection even on external urls, which may cause origin issues.
+ * Credit to B Cavalier & J Hann for the elegant IE 6 - 9 hack.
+ * 
+ * Other sources that helped along the way:
+ * - https://developer.mozilla.org/en-US/docs/Browser_detection_using_the_user_agent
+ * - http://www.phpied.com/when-is-a-stylesheet-really-loaded/
+ * - https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
  *
  */
 
-
-/*
-
-Improvements
-- further test webkit load callbacks to understand style delay
-- integrate IE6 - 9 hacks from curl (https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js)
-- comprehensive device testing, ultimately removing style injection fallback
-
-Credit to B Cavalier & J Hann for the amazing IE 6 - 9 hack.
-
-Sources that helped along the way:
-- https://developer.mozilla.org/en-US/docs/Browser_detection_using_the_user_agent
-- http://www.phpied.com/when-is-a-stylesheet-really-loaded/
-- https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
-
-*/
 define(['./normalize', 'module'], function(normalize, module) {
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
+
+  // set to true to enable test prompts for device testing
+  var testing = false;
   
   var head = document.getElementsByTagName('head')[0];
 
@@ -40,20 +45,22 @@ define(['./normalize', 'module'], function(normalize, module) {
 
   if (!engine) {}
   else if (engine[1] || engine[7]) {
+    hackLinks = (parseInt(engine[1]) < 6) || (parseInt(engine[7]) <= 9);
     engine = 'trident';
-    hackLinks = parseInt(engine[1]) < 6 || parseInt(engine[7]) <= 9;
   }
   else if (engine[2]) {
-    engine = 'webkit';
     hackLinks = true;
+    engine = 'webkit';
   }
   else if (engine[3]) {
     // engine = 'opera';
   }
   else if (engine[4]) {
-    engine = 'gecko';
     hackLinks = parseInt(engine[4]) < 18;
+    engine = 'gecko';
   }
+  else if (testing)
+    alert('Engine detection failed');
 
   /* XHR code - copied from RequireJS text plugin */
   var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
@@ -191,7 +198,10 @@ define(['./normalize', 'module'], function(normalize, module) {
   var noop = function(){}
 
   cssAPI.linkLoad = function(url, callback) {
-    var timeout = setTimeout(callback, waitSeconds * 1000 - 100);
+    var timeout = setTimeout(function() {
+      if (testing) alert('timeout');
+      callback();
+    }, waitSeconds * 1000 - 100);
     var _callback = function() {
       clearTimeout(timeout);
       if (link)
@@ -218,7 +228,7 @@ define(['./normalize', 'module'], function(normalize, module) {
         head.appendChild(style);
       }
       else if (engine == 'trident')
-        ieLoad(url, callback);
+        ieLoad(url, _callback);
     }
   }
 
@@ -312,7 +322,7 @@ define(['./normalize', 'module'], function(normalize, module) {
     
     // links
     if (!parse) {
-      if (!alerted)
+      if (!alerted && testing)
         alert(hackLinks ? 'hacking links' : 'not hacking');
       alerted = true;
       cssAPI.linkLoad(fileUrl, function() {
