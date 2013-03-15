@@ -9,7 +9,7 @@
  * Usage:
  *  require(['css!./mycssFile']);
  *
- * Typically leave out the '.css' extension.
+ * NB leave out the '.css' extension.
  *
  * - Fully supports cross origin CSS loading
  * - Works with builds
@@ -31,12 +31,11 @@
  * - http://www.phpied.com/when-is-a-stylesheet-really-loaded/
  * - https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
  *
- * Guy Bedford 2013
- * MIT license
- *
  */
 
 define(['./normalize'], function(normalize) {
+  function indexOf(a, e) { for (var i=0, l=a.length; i < l; i++) if (a[i] === e) return i; return -1 }
+
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
 
@@ -81,6 +80,12 @@ define(['./normalize'], function(normalize) {
     curBuffer.push(cssId);
   }
   cssAPI.setBuffer = function(css) {
+    var bufferName = curBuffer.toString();
+
+    // dont double inject css
+    if (cssAPI[bufferName])
+      return;
+
     var pathname = window.location.pathname.split('/');
     pathname.pop();
     pathname = pathname.join('/') + '/';
@@ -94,7 +99,7 @@ define(['./normalize'], function(normalize) {
     if (baseUrl.substr(baseUrl.length - 1, 1) != '/')
       baseUrl = baseUrl + '/';
 
-    cssAPI.buffer[curBuffer.toString()] = normalize(css, baseUrl, pathname);
+    cssAPI.buffer[bufferName] = normalize(css, baseUrl, pathname);
     curBuffer = [];
   }
 
@@ -331,7 +336,7 @@ define(['./normalize'], function(normalize) {
 
     // if in the built buffer do injection
     for (var b in cssAPI.buffer) {
-      if (b.split(',').indexOf(fileUrl) != -1) {
+      if (indexOf(b.split(','), fileUrl) != -1) {
         var bufferVal = cssAPI.buffer[b];
         if (bufferVal !== true) {
           cssAPI.inject(bufferVal);
