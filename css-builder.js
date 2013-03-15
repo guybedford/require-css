@@ -206,8 +206,9 @@ define(['require', './normalize'], function(req, normalize) {
       //normalization is then performed from the absolute baseurl to the absolute pathname
       write(''
         + '(function(g) { \n'
+        + '  function indexOf(a, e) { for (var i=0, l=a.length; i < l; i++) if (a[i] === e) return i; return -1 }'
         + '  g._cssWritten = g._cssWritten || []; \n'
-        + '  if (g._cssWritten.indexOf(\'' + data.name + (parser ? '-' : '') + '\') != -1) return; \n'
+        + '  if (indexOf(g._cssWritten, \'' + data.name + (parser ? '-' : '') + '\') != -1) return; \n'
         + '  g._cssWritten.push(\'' + data.name + (parser ? '-' : '') + '\');'
         + '  for (var c in requirejs.s.contexts) { requirejs.s.contexts[c].nextTick = function(f){f()} } \n'
         + '  require([\'css\', \'' + normalizeName + '\', \'require\'], function(css, normalize, req) { \n'
