@@ -7,6 +7,8 @@ Useful for writing modular CSS dependencies alongside scripts. For an example of
 
 For LESS inclusion, use [require-less](https://github.com/guybedford/require-less), which behaves and builds the css exactly like this module apart from the preprocessing step.
 
+**Prerelease of upcoming 0.1 version featuring comprehensive browser support for cross-domain stylesheets.**
+
 Overview
 --------
 
@@ -19,9 +21,9 @@ define(['css!styles/main'], function() {
 ```
 
 ### CSS Requiring
-* **CSS requiring** CSS is downloaded and injected into the page. Url path normalization of assets within the CSS file is managed. Imports are fully supported with the load callback.
-* **Fully compatible load callback** The plugin call is loaded once the CSS is downloaded and injected. This method works across all browsers and devices using a hybrid `<style>` and `<link>` tag approach.
-* **Cross-domain CSS support** Cross-domain CSS is by default loaded with `<link>` tag support, but can also be set to `<style>` loading if the environment is configured for CORS.
+* Fully compatible in IE 6 - 10, Chrome 3 - 26, Firefox 3.5 - 19, Opera 10 - 12, iOS, Android
+* Cross-domain style loading
+* Line numbers in dev inspector correlate with correct CSS file
 
 ### CSS Building
 * **CSS builds** When run as part of a build with the RequireJS optimizer, `css!` dependencies are automatically inlined into the built layer within the JavaScript, fully compatible with layering. CSS injection is performed as soon as the layer is loaded.
@@ -175,29 +177,8 @@ Separate build layers can then be made for mobile specific use. Read more at the
 Injection methods
 -----------------
 
-There are well known issues with the `onLoad` callback for a `<link>` tag to register CSS require completion (http://requirejs.org/docs/faq-advanced.html#css).
-Require-CSS provides the `<link>` tag onload method only in browsers known to have the support. It then falls back onto using a `<style>` tag injection method
-for other browsers and devices. This way, CSS load completion is guaranteed, and styles can be queried reliably.
-
-
-Depending on the environment constraints, the loading method can be forced using the configuration option `useLinks`:
-
-```javascript
-{
-  config: {
-    'require-css/css': {
-      useLinks: true or false
-    }
-  }
-}
-```
-
-When forcing `<link>` injection, this may not properly callback on older browsers and some devices that haven't been tested. Also, CSS parsing with the `require-less`
-module is not supported with the `<link>` loading and will always inject into a `<style>` tag due to the nature of parsing. To include a specific device in the
-`<link>` support automatically that is known to work, please do file a feature request.
-
-When forcing `<style>` injection (`useLinks: false`), external stylesheets may not be able to load due to cross origin issues. Although if only supporting modern browsers
-with CORS support, this would be able to work.
+* When loading a CSS file or external CSS file, a `<link>` tag is used. Cross-browser support comes through a number of careful browser conditions for this.
+* When using Require-LESS parsing or when injecting CSS from the built `<script>` tag, a CSS `<style>` injection is used.
 
 If CSS resources such as images are important to be loaded first, these can be added to the require through a loader plugin that can act as a preloader such as [image](https://github.com/millermedeiros/requirejs-plugins) or [font](https://github.com/millermedeiros/requirejs-plugins). Then a require can be written of the form:
 
