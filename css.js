@@ -71,21 +71,16 @@ define(['./normalize'], function(normalize) {
   var cssAPI = {};
   
   // for builds, store css for injection
-  cssAPI.buffer = {};
+  cssAPI.bufferLoaded = {};
   cssAPI.pluginBuilder = './css-builder';
 
   // used by layer builds to register their css buffers
-  var curBuffer = [];
+  var buffer = [];
   cssAPI.addBuffer = function(cssId) {
-    curBuffer.push(cssId);
+    if (buffer.indexOf(cssId) == -1)
+      buffer.push(cssId);
   }
-  cssAPI.setBuffer = function(css) {
-    var bufferName = curBuffer.toString();
-
-    // dont double inject css
-    if (cssAPI[bufferName])
-      return;
-
+  cssAPI.setBuffer = function(css, parser) {
     var pathname = window.location.pathname.split('/');
     pathname.pop();
     pathname = pathname.join('/') + '/';
@@ -99,8 +94,13 @@ define(['./normalize'], function(normalize) {
     if (baseUrl.substr(baseUrl.length - 1, 1) != '/')
       baseUrl = baseUrl + '/';
 
-    cssAPI.buffer[bufferName] = normalize(css, baseUrl, pathname);
-    curBuffer = [];
+    cssAPI.inject(normalize(css, baseUrl, pathname));
+
+    for (var i = 0; i < buffer.length; i++) {
+      if (cssAPI.bufferLoaded[buffer[i]] && cssAPI.bufferLoaded[buffer[i]] !== true)
+        if ((!parser && buffer[i].substr(buffer[i].length - 4, 4) == '.css') || (parser && buffer[i].substr(buffer[i].length - 5, 5) == '.less'))
+          setTimeout(cssAPI.bufferLoaded[buffer[i]], 7);
+    }
   }
 
   var webkitLoadCheck = function(link, callback) {
@@ -335,16 +335,14 @@ define(['./normalize'], function(normalize) {
     var fileUrl = cssId + (parse ? '.less' : '.css');
 
     // if in the built buffer do injection
-    for (var b in cssAPI.buffer) {
-      if (indexOf(b.split(','), fileUrl) != -1) {
-        var bufferVal = cssAPI.buffer[b];
-        if (bufferVal !== true) {
-          cssAPI.inject(bufferVal);
-          cssAPI.buffer[b] = true;
-        }
-        return setTimeout(load, 7);
+    for (var i = 0; i < buffer.length; i++)
+      if (buffer[i] == fileUrl) {
+        if (cssAPI.bufferLoaded[fileUrl] === true)
+          load();
+        else
+          cssAPI.bufferLoaded[fileUrl] = load;
+        return;
       }
-    }
 
     fileUrl = req.toUrl(fileUrl);
     
@@ -360,10 +358,10 @@ define(['./normalize'], function(normalize) {
       loadCSS(fileUrl, function(css) {
         // run parsing after normalization - since less is a CSS subset this works fine
         if (parse)
-          css = parse(css);
-
-        cssAPI.inject(css);
-        setTimeout(load, 7);
+          css = parse(css, function(css) {
+            cssAPI.inject(css);
+            setTimeout(load, 7);
+          });
       });
     }
   }

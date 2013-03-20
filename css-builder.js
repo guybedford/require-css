@@ -118,7 +118,7 @@ define(['require', './normalize'], function(req, normalize) {
 
     //normalize all css to the base url - as the common path reference
     //for injection we then only need one normalization from the base url
-    css = normalize(css, fileUrl, baseUrl);
+    //css = normalize(css, fileUrl, baseUrl);
 
     // parse if necessary
     if (parse)
@@ -207,7 +207,7 @@ define(['require', './normalize'], function(req, normalize) {
     if (separateCSS)
       write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
     else
-      write("require(['css'], function(css) { css.addBuffer('" +  moduleName + (parse ? '.less' : '.css') + "'); });");
+      write("require(['css'], function(css) { css.addBuffer('" +  moduleName + (parse ? ".less', true" : ".css'") + "); });");
   }
   
   cssAPI.onLayerEnd = function(write, data, parser) {
@@ -242,7 +242,7 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //the code below overrides async require functionality to ensure instant buffer injection
-      write("require(['css'], function(css) { css.setBuffer('" + css + "'); });");
+      write("require(['css'], function(css) { css.setBuffer('" + css + (parser ? "', true" : "'") + "); });");
     }
     
     //clear layer buffer for next layer
