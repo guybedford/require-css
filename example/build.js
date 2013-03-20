@@ -4,6 +4,7 @@
   baseUrl: '.',
   fileExclusionRegExp: /(^example)|(.git)$/,
   //separateCSS: true,
+  optimizeCss: "node",
   map: {
     '*': {
       css: 'require-css/css'
@@ -19,6 +20,10 @@
     separateCSS: true,
     create: true,
     include: ['components/component'], 
+  },
+  {
+    name: 'popup',
+    exclude: ['core-components']
   }
   ]
   //name: 'app.js',
