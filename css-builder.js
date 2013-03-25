@@ -145,7 +145,18 @@ define(['require', './normalize'], function(req, normalize) {
       var importUrl = match[4] || match[5] || match[7] || match[8] || match[9];
 
       // normalize import url
-      importUrl = req.toUrl(importUrl);
+      if (importUrl.substr(importUrl.length - 5, 5) != '.less' && importUrl.substr(importUrl.length - 4, 4) != '.css')
+        importUrl += '.css';
+
+      // relative to css base
+      if (importUrl.substr(0, 1) == '/')
+        continue;
+
+      // contains a protocol
+      if (importUrl.match(/:\/\//))
+        continue;
+
+      importUrl = baseUrl + importUrl;
 
       importUrls.push(importUrl);
       importIndex.push(importRegEx.lastIndex - match[0].length);
