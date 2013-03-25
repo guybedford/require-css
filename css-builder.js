@@ -90,6 +90,7 @@ define(['require', './normalize'], function(req, normalize) {
   }
 
   var baseUrl;  
+  var cssBase;
 
   var loadCSS = function(cssId, parse) {
     if (!baseUrl) {
@@ -148,15 +149,17 @@ define(['require', './normalize'], function(req, normalize) {
       if (importUrl.substr(importUrl.length - 5, 5) != '.less' && importUrl.substr(importUrl.length - 4, 4) != '.css')
         importUrl += '.css';
 
-      // relative to css base
-      if (importUrl.substr(0, 1) == '/')
-        continue;
-
       // contains a protocol
       if (importUrl.match(/:\/\//))
         continue;
 
-      importUrl = baseUrl + importUrl;
+      // relative to css base
+      if (importUrl.substr(0, 1) == '/')
+        importUrl = cssBase + importUrl;
+      else
+        importUrl = baseUrl + importUrl;
+
+      console.log('importing ' + importUrl);
 
       importUrls.push(importUrl);
       importIndex.push(importRegEx.lastIndex - match[0].length);
@@ -178,6 +181,12 @@ define(['require', './normalize'], function(req, normalize) {
   
   var curModule;
   cssAPI.load = function(name, req, load, config) {
+    if (!cssBase) {
+      cssBase = config.cssBase || config.appDir || baseUrl;
+      if (cssBase.substr(cssBase.length - 1, 1) != '/')
+        cssBase += '/';
+    }
+
     if (config.modules) {
       //run through the module list - the first one without a layer set is the current layer we are in
       //allows to track the current layer number for layer-specific config
