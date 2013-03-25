@@ -4,7 +4,7 @@ define(['require', './normalize'], function(req, normalize) {
     requirejs.tools.useLib(function(req) {
       req(['node/print'], function(_nodePrint) {
         nodePrint = _nodePrint;
-      });
+      }, function(){});
     });
   
   var cssAPI = {};
