@@ -227,7 +227,7 @@ define(['require', './normalize'], function(req, normalize) {
     if (separateCSS)
       write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
     else
-      write("require(['css'], function(css) { css.addBuffer('" +  moduleName + (parse ? ".less', true" : ".css'") + "); });");
+      write("requirejs.s.contexts._.nextTick = function(f){f()} require(['css'], function(css) { css.addBuffer('" +  moduleName + (parse ? ".less', true" : ".css'") + "); }); requirejs.s.contexts._.nextTick = requirejs.nextTick;");
   }
   
   cssAPI.onLayerEnd = function(write, data, parser) {
@@ -262,7 +262,7 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //the code below overrides async require functionality to ensure instant buffer injection
-      write("require(['css'], function(css) { css.setBuffer('" + css + (parser ? "', true" : "'") + "); });");
+      write("requirejs.s.contexts._.nextTick = function(f){f()} require(['css'], function(css) { css.setBuffer('" + css + (parser ? "', true" : "'") + "); }); requirejs.s.contexts._.nextTick = requirejs.nextTick; ");
     }
     
     //clear layer buffer for next layer
