@@ -97,12 +97,25 @@ define(['./normalize'], function(normalize) {
     cssAPI.inject(normalize(css, baseUrl, pathname));
 
     for (var i = 0; i < buffer.length; i++) {
-      if (cssAPI.bufferLoaded[buffer[i]] && cssAPI.bufferLoaded[buffer[i]] !== true)
-        if ((!parser && buffer[i].substr(buffer[i].length - 4, 4) == '.css') || (parser && buffer[i].substr(buffer[i].length - 5, 5) == '.less'))
+      if (cssAPI.bufferLoaded[buffer[i]] && cssAPI.bufferLoaded[buffer[i]] !== true) {
+        if ((!parser && isCSS(buffer[i])) || (parser && isLess(buffer[i]))) {
           setTimeout(cssAPI.bufferLoaded[buffer[i]], 7);
+          cssAPI.bufferLoaded[buffer[i]] = true;
+        }
+      } else {
+        cssAPI.bufferLoaded[buffer[i]] = true;
+      }
     }
   }
+  
+  var isCSS = function(fileUrl) {
+    return fileUrl.substr(fileUrl.length - 4, 4) === '.css';
+  }
 
+  var isLess = function(fileUrl) {
+    return fileUrl.substr(fileUrl.length - 5, 5) === '.less';
+  }
+  
   var webkitLoadCheck = function(link, callback) {
     setTimeout(function() {
       for (var i = 0; i < document.styleSheets.length; i++) {
@@ -320,7 +333,7 @@ define(['./normalize'], function(normalize) {
 
   
   cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 4, 4) == '.css')
+    if (isCSS(name))
       name = name.substr(0, name.length - 4);
     
     return normalize(name);
