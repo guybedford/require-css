@@ -89,45 +89,6 @@ define(['require', './normalize'], function(req, normalize) {
       .replace(/[\r]/g, "\\r");
   }
 
-  var baseUrl;  
-  var cssBase;
-
-  var loadCSS = function(cssId, parse) {
-    if (!baseUrl) {
-      var baseParts = req.toUrl('base_url').split('/');
-      baseParts.pop();
-      baseUrl = baseParts.join('/') + '/';
-    }
-
-    var fileUrl = cssId;
-    
-    if (fileUrl.substr(fileUrl.length - 4, 4) != '.css' && !parse)
-      fileUrl += '.css';
-    
-    fileUrl = req.toUrl(fileUrl);
-    
-    //external URLS don't get added (just like JS requires)
-    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://')
-      return;
-    
-    //add to the buffer
-    var css = loadCSSFile(fileUrl);
-
-    //make file url absolute
-    //if (fileUrl.substr(0, 1) != '/')
-    //  fileUrl = '/' + fileUrl;
-
-    //normalize all css to the base url - as the common path reference
-    //for injection we then only need one normalization from the base url
-    //css = normalize(css, fileUrl, baseUrl);
-
-    // parse if necessary
-    if (parse)
-      css = parse(css);
-    
-    return css;
-  }
-
   // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
 
@@ -159,8 +120,6 @@ define(['require', './normalize'], function(req, normalize) {
       else
         importUrl = baseUrl + importUrl;
 
-      console.log('importing ' + importUrl);
-
       importUrls.push(importUrl);
       importIndex.push(importRegEx.lastIndex - match[0].length);
       importLength.push(match[0].length);
@@ -179,8 +138,11 @@ define(['require', './normalize'], function(req, normalize) {
     return css;
   }
   
+
+  var baseUrl;  
+  var cssBase;
   var curModule;
-  cssAPI.load = function(name, req, load, config) {
+  cssAPI.load = function(name, req, load, config, parse) {
     if (!cssBase) {
       cssBase = config.cssBase || config.appDir || baseUrl;
       if (cssBase.substr(cssBase.length - 1, 1) != '/')
@@ -196,10 +158,31 @@ define(['require', './normalize'], function(req, normalize) {
           break;
         }
     }
+
+    if (!baseUrl) {
+      var baseParts = req.toUrl('base_url').split('/');
+      baseParts.pop();
+      baseUrl = baseParts.join('/') + '/';
+    }
     
     //store config
     cssAPI.config = cssAPI.config || config;
-    //just return - 'write' calls are made after exclusions so we run loading there
+
+    name += !parse ? '.css' : '.less';
+
+    var fileUrl = req.toUrl(name);
+
+    //external URLS don't get added (just like JS requires)
+    if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://')
+      return;
+
+    //add to the buffer
+    _cssBuffer[name] = loadCSSFile(fileUrl);
+
+    // parse if necessary
+    if (parse)
+      _cssBuffer[name] = parse(_cssBuffer[name]);
+
     load();
   }
   
@@ -211,13 +194,15 @@ define(['require', './normalize'], function(req, normalize) {
   
   //list of cssIds included in this layer
   var _layerBuffer = [];
+  var _cssBuffer = [];
 
-  cssAPI.write = function(pluginName, moduleName, write, extension, parse) {
+  cssAPI.write = function(pluginName, moduleName, write, parse) {
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
     
-    _layerBuffer.push(loadCSS(moduleName + (extension ? '.' + extension : ''), parse));
+    var resourceName = moduleName + (!parse ? '.css' : '.less');
+    _layerBuffer.push(_cssBuffer[resourceName]);
 
     var separateCSS = false;
     if (cssAPI.config.separateCSS)
@@ -227,7 +212,7 @@ define(['require', './normalize'], function(req, normalize) {
     if (separateCSS)
       write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
     else
-      write("requirejs.s.contexts._.nextTick = function(f){f()}; require(['css'], function(css) { css.addBuffer('" +  moduleName + (parse ? ".less', true" : ".css'") + "); }); requirejs.s.contexts._.nextTick = requirejs.nextTick;");
+      write("requirejs.s.contexts._.nextTick = function(f){f()}; require(['css'], function(css) { css.addBuffer('" + resourceName + "'); }); requirejs.s.contexts._.nextTick = requirejs.nextTick;");
   }
   
   cssAPI.onLayerEnd = function(write, data, parser) {

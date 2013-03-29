@@ -70,17 +70,30 @@ define(['./normalize'], function(normalize) {
   //main api object
   var cssAPI = {};
   
-  // for builds, store css for injection
-  cssAPI.bufferLoaded = {};
   cssAPI.pluginBuilder = './css-builder';
 
   // used by layer builds to register their css buffers
-  var buffer = [];
-  cssAPI.addBuffer = function(cssId) {
-    if (indexOf(buffer, cssId) == -1)
-      buffer.push(cssId);
+  
+  // the current layer buffer items (from addBuffer)
+  var curBuffer = [];
+
+  // the callbacks for buffer loads
+  var onBufferLoad = [];
+
+  // the full list of resources in the buffer
+  var bufferResources = [];
+
+  cssAPI.addBuffer = function(resourceId) {
+    // just in case layer scripts are included twice, also check
+    // against the previous buffers
+    if (indexOf(curBuffer, resourceId) != -1)
+      return;
+    if (indexOf(bufferResources, resourceId) != -1)
+      return;
+    curBuffer.push(resourceId);
+    bufferResources.push(resourceId);
   }
-  cssAPI.setBuffer = function(css, parser) {
+  cssAPI.setBuffer = function(css, isLess) {
     var pathname = window.location.pathname.split('/');
     pathname.pop();
     pathname = pathname.join('/') + '/';
@@ -96,15 +109,53 @@ define(['./normalize'], function(normalize) {
 
     cssAPI.inject(normalize(css, baseUrl, pathname));
 
-    for (var i = 0; i < buffer.length; i++)
-      if (cssAPI.bufferLoaded[buffer[i]] !== true && (!parser == (buffer[i].substr(buffer[i].length - 4, 4) == '.css')))
+    // set up attach callback if registered
+    // clear the current buffer for the next layer
+    // (just the less or css part as we have two buffers in one effectively)
+    for (var i = 0; i < curBuffer.length; i++) {
+      // find the resources in the less or css buffer dependening which one this is
+      if ((isLess && curBuffer[i].substr(curBuffer[i].length - 5, 5) == '.less') ||
+        (!isLess && curBuffer[i].substr(curBuffer[i].length - 4, 4) == '.css')) {
+        
+        // mark that the onBufferLoad is about to be called (set to true if not already a callback function)
+        onBufferLoad[curBuffer[i]] = onBufferLoad[curBuffer[i]] || true;
+
+        // set a short timeout (as injection isn't instant in Chrome), then call the load
         (function(i) {
           setTimeout(function() {
-            if (typeof cssAPI.bufferLoaded[buffer[i]] == 'function')
-              cssAPI.bufferLoaded[buffer[i]]();
-            cssAPI.bufferLoaded[buffer[i]] = true;
-          })
+            if (typeof onBufferLoad[curBuffer[i]] == 'function')
+              onBufferLoad[curBuffer[i]]();
+            // remove from onBufferLoad to indicate loaded
+            delete onBufferLoad[curBuffer[i]];
+          }, 7);
         })(i);
+      }
+    }
+  }
+  cssAPI.attachBuffer = function(resourceId, load) {
+    // attach can happen during buffer collecting, or between injection and callback
+    // we assume it is not possible to attach multiple callbacks
+    // requirejs plugin load function ensures this by queueing duplicate calls
+
+    // check if the resourceId is in the current buffer
+    for (var i = 0; i < curBuffer.length; i++)
+      if (curBuffer[i] == resourceId) {
+        onBufferLoad[resourceId] = load;
+        return true;
+      }
+
+    // check if the resourceId is waiting for injection callback
+    // (onBufferLoad === true is a shortcut indicator for this)
+    if (onBufferLoad[resourceId] === true) {
+      onBufferLoad[resourceId] = load;
+      return true;
+    }
+
+    // if it's in the full buffer list and not either of the above, its loaded already
+    if (bufferResources[resourceId]) {
+      load();
+      return true;
+    }
   }
 
   var webkitLoadCheck = function(link, callback) {
@@ -336,19 +387,14 @@ define(['./normalize'], function(normalize) {
     
     waitSeconds = waitSeconds || config.waitSeconds || 7;
 
-    var fileUrl = cssId + (parse ? '.less' : '.css');
+    var resourceId = cssId + (!parse ? '.css' : '.less');
 
-    // if in the built buffer do injection
-    for (var i = 0; i < buffer.length; i++)
-      if (buffer[i] == fileUrl) {
-        if (cssAPI.bufferLoaded[fileUrl] === true)
-          load();
-        else
-          cssAPI.bufferLoaded[fileUrl] = load;
-        return;
-      }
+    // attach the load function to a buffer if there is one in registration
+    // if not, we do a full injection load
+    if (cssAPI.attachBuffer(resourceId, load))
+      return;
 
-    fileUrl = req.toUrl(fileUrl);
+    fileUrl = req.toUrl(resourceId);
     
     if (!alerted && testing) {
       alert(hackLinks ? 'hacking links' : 'not hacking');
