@@ -116,19 +116,21 @@ define(['./normalize'], function(normalize) {
       // find the resources in the less or css buffer dependening which one this is
       if ((isLess && curBuffer[i].substr(curBuffer[i].length - 5, 5) == '.less') ||
         (!isLess && curBuffer[i].substr(curBuffer[i].length - 4, 4) == '.css')) {
-        
-        // mark that the onBufferLoad is about to be called (set to true if not already a callback function)
-        onBufferLoad[curBuffer[i]] = onBufferLoad[curBuffer[i]] || true;
+        (function(resourceId) {
+          // mark that the onBufferLoad is about to be called (set to true if not already a callback function)
+          onBufferLoad[resourceId] = onBufferLoad[resourceId] || true;
 
-        // set a short timeout (as injection isn't instant in Chrome), then call the load
-        (function(i) {
+          // set a short timeout (as injection isn't instant in Chrome), then call the load
           setTimeout(function() {
-            if (typeof onBufferLoad[curBuffer[i]] == 'function')
-              onBufferLoad[curBuffer[i]]();
+            if (typeof onBufferLoad[resourceId] == 'function')
+              onBufferLoad[resourceId]();
             // remove from onBufferLoad to indicate loaded
-            delete onBufferLoad[curBuffer[i]];
+            delete onBufferLoad[resourceId];
           }, 7);
-        })(i);
+        })(curBuffer[i]);
+
+        // remove the current resource from the buffer
+        curBuffer.splice(i--, 1);
       }
     }
   }
