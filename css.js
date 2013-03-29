@@ -96,11 +96,15 @@ define(['./normalize'], function(normalize) {
 
     cssAPI.inject(normalize(css, baseUrl, pathname));
 
-    for (var i = 0; i < buffer.length; i++) {
-      if (cssAPI.bufferLoaded[buffer[i]] && cssAPI.bufferLoaded[buffer[i]] !== true)
-        if ((!parser && buffer[i].substr(buffer[i].length - 4, 4) == '.css') || (parser && buffer[i].substr(buffer[i].length - 5, 5) == '.less'))
-          setTimeout(cssAPI.bufferLoaded[buffer[i]], 7);
-    }
+    for (var i = 0; i < buffer.length; i++)
+      if (cssAPI.bufferLoaded[buffer[i]] !== true && (!parser == (buffer[i].substr(buffer[i].length - 4, 4) == '.css')))
+        (function(i) {
+          setTimeout(function() {
+            if (typeof cssAPI.bufferLoaded[buffer[i]] == 'function')
+              cssAPI.bufferLoaded[buffer[i]]();
+            cssAPI.bufferLoaded[buffer[i]] = true;
+          })
+        })(i);
   }
 
   var webkitLoadCheck = function(link, callback) {
