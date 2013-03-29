@@ -77,7 +77,7 @@ define(['./normalize'], function(normalize) {
   // used by layer builds to register their css buffers
   var buffer = [];
   cssAPI.addBuffer = function(cssId) {
-    if (buffer.indexOf(cssId) == -1)
+    if (indexOf(buffer, cssId) == -1)
       buffer.push(cssId);
   }
   cssAPI.setBuffer = function(css, parser) {
