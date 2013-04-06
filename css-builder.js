@@ -143,6 +143,9 @@ define(['require', './normalize'], function(req, normalize) {
   var cssBase;
   var curModule;
   cssAPI.load = function(name, req, load, config, parse) {
+    if (!baseUrl)
+      baseUrl = config.baseUrl;
+    
     if (!cssBase) {
       cssBase = config.cssBase || config.appDir || baseUrl;
       if (cssBase.substr(cssBase.length - 1, 1) != '/')
@@ -157,12 +160,6 @@ define(['require', './normalize'], function(req, normalize) {
           curModule = i;
           break;
         }
-    }
-
-    if (!baseUrl) {
-      var baseParts = req.toUrl('base_url').split('/');
-      baseParts.pop();
-      baseUrl = baseParts.join('/') + '/';
     }
     
     //store config

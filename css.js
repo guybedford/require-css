@@ -78,7 +78,7 @@ define(['./normalize'], function(normalize) {
   var curBuffer = [];
 
   // the callbacks for buffer loads
-  var onBufferLoad = [];
+  var onBufferLoad = {};
 
   // the full list of resources in the buffer
   var bufferResources = [];
@@ -154,7 +154,7 @@ define(['./normalize'], function(normalize) {
     }
 
     // if it's in the full buffer list and not either of the above, its loaded already
-    if (bufferResources[resourceId]) {
+    if (indexOf(bufferResources, resourceId) != -1) {
       load();
       return true;
     }
@@ -407,8 +407,6 @@ define(['./normalize'], function(normalize) {
       cssAPI.linkLoad(fileUrl, load);
     }
     else {
-      if (fileUrl.indexOf('.less') === -1 && parse)
-        fileUrl += '.less';
       loadCSS(fileUrl, function(css) {
         // run parsing after normalization - since less is a CSS subset this works fine
         if (parse)
