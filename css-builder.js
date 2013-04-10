@@ -194,7 +194,8 @@ define(['require', './normalize'], function(req, normalize) {
   var _cssBuffer = [];
   var _pluginName = '';
   cssAPI.write = function(pluginName, moduleName, write, parse) {
-    _pluginName = pluginName;
+    if (!parse)
+      _pluginName = pluginName;
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
