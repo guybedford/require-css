@@ -250,7 +250,7 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //the code below overrides async require functionality to ensure instant buffer injection
-      write("requirejs.s.contexts._.nextTick = function(f){f()}; require(['" + (parser ? _parserPluginName : _parserName) + "'], function(css) { css.setBuffer('" + css + (parser ? "', true" : "'") + "); }); requirejs.s.contexts._.nextTick = requirejs.nextTick; ");
+      write("requirejs.s.contexts._.nextTick = function(f){f()}; require(['" + (parser ? _parserPluginName : _pluginName) + "'], function(css) { css.setBuffer('" + css + (parser ? "', true" : "'") + "); }); requirejs.s.contexts._.nextTick = requirejs.nextTick; ");
     }
     
     //clear layer buffer for next layer
