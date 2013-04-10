@@ -193,9 +193,13 @@ define(['require', './normalize'], function(req, normalize) {
   var _layerBuffer = [];
   var _cssBuffer = [];
   var _pluginName = '';
+  var _parserPluginName = '';
   cssAPI.write = function(pluginName, moduleName, write, parse) {
-    if (!parse)
+    _pluginName = pluginName;
+    if (pluginName.substr(pluginName.length - 3) == 'css')
       _pluginName = pluginName;
+    else
+      _parserPluginName = pluginName;
     //external URLS don't get added (just like JS requires)
     if (moduleName.substr(0, 7) == 'http://' || moduleName.substr(0, 8) == 'https://')
       return;
@@ -246,7 +250,7 @@ define(['require', './normalize'], function(req, normalize) {
       css = escape(compress(css));
       
       //the code below overrides async require functionality to ensure instant buffer injection
-      write("requirejs.s.contexts._.nextTick = function(f){f()}; require(['" + _pluginName + "'], function(css) { css.setBuffer('" + css + (parser ? "', true" : "'") + "); }); requirejs.s.contexts._.nextTick = requirejs.nextTick; ");
+      write("requirejs.s.contexts._.nextTick = function(f){f()}; require(['" + (parser ? _parserPluginName : _parserName) + "'], function(css) { css.setBuffer('" + css + (parser ? "', true" : "'") + "); }); requirejs.s.contexts._.nextTick = requirejs.nextTick; ");
     }
     
     //clear layer buffer for next layer
