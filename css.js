@@ -102,7 +102,7 @@ define(['./normalize'], function(normalize) {
     baseParts.pop();
     var baseUrl = baseParts.join('/') + '/';
     baseUrl = normalize.convertURIBase(baseUrl, pathname, '/');
-    if (baseUrl.substr(0, 1) != '/')
+    if (!baseUrl.match(/^\/|([^\:\/]*:)/))
       baseUrl = '/' + baseUrl;
     if (baseUrl.substr(baseUrl.length - 1, 1) != '/')
       baseUrl = baseUrl + '/';

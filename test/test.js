@@ -37,7 +37,16 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     normalize.convertURIBase('some//test', '/one/two/three/', '/one/two/four/'),
     '../three/some/test'
   );
-
+  assert(
+    'protocol base urls work',
+    normalize.convertURIBase('some/file', 'http://www.google.com:80/', 'http://www.google.com:80/sub/'),
+    '../some/file'
+  );
+  assert(
+    'absolute protocol paths work with base conversion',
+    normalize.convertURIBase('some/file', 'baseUrl/', 'http://some.cdn.com/baseUrl/'),
+    'http://some.cdn.com/baseUrl/some/file'
+  );
   console.log('\nTesting Stylesheet Regular Expressions');
   assert(
     '@import statements',

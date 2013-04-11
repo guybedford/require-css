@@ -40,14 +40,22 @@ define(['require', 'module'], function(require, module) {
   }
 
   // given a relative URI, and two absolute base URIs, convert it from one base to another
+  var protocolRegEx = /[^\:\/]*:\/\/([^\/])*/
   function convertURIBase(uri, fromBase, toBase) {
     if(uri.indexOf("data:") === 0)
       return uri;
     uri = removeDoubleSlashes(uri);
     // absolute urls are left in tact
-    if (uri.match(/^\/|([^\:\/]*:)/))
+    if (uri.match(/^\//) || uri.match(protocolRegEx))
       return uri;
-    return relativeURI(absoluteURI(uri, fromBase), toBase);
+    // if toBase specifies a protocol path, ensure this is the same protocol as fromBase, if not
+    // use absolute path at fromBase
+    var toBaseProtocol = toBase.match(protocolRegEx);
+    var fromBaseProtocol = fromBase.match(protocolRegEx);
+    if (toBaseProtocol && (!fromBaseProtocol || fromBaseProtocol[1] != toBaseProtocol[1] || fromBaseProtocol[2] != toBaseProtocol[2]))
+      return absoluteURI(uri, toBase);
+    else
+      return relativeURI(absoluteURI(uri, fromBase), toBase);
   };
   
   // given a relative URI, calculate the absolute URI
