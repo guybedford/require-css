@@ -52,8 +52,8 @@ define(['require', 'module'], function(require, module) {
     // use absolute path at fromBase
     var toBaseProtocol = toBase.match(protocolRegEx);
     var fromBaseProtocol = fromBase.match(protocolRegEx);
-    if (toBaseProtocol && (!fromBaseProtocol || fromBaseProtocol[1] != toBaseProtocol[1] || fromBaseProtocol[2] != toBaseProtocol[2]))
-      return absoluteURI(uri, toBase);
+    if (fromBaseProtocol && (!toBaseProtocol || toBaseProtocol[1] != fromBaseProtocol[1] || toBaseProtocol[2] != fromBaseProtocol[2]))
+      return absoluteURI(uri, fromBase);
     else
       return relativeURI(absoluteURI(uri, fromBase), toBase);
   };
