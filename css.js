@@ -333,7 +333,8 @@ define(['./normalize'], function(normalize) {
   var loadCSS = function(fileUrl, callback, errback) {
 
     //make file url absolute
-    if (fileUrl.substr(0, 1) != '/')
+    var pat = /^(https?:\/)?\//i;
+    if (!pat.test(fileUrl))
       fileUrl = '/' + normalize.convertURIBase(fileUrl, pathname, '/');
 
     get(fileUrl, function(css) {
