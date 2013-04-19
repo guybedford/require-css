@@ -69,6 +69,8 @@ define(['./normalize'], function(normalize) {
   
   //main api object
   var cssAPI = {};
+
+  var absUrlRegEx = /^\/|([^\:\/]*:)/;
   
   cssAPI.pluginBuilder = './css-builder';
 
@@ -102,7 +104,7 @@ define(['./normalize'], function(normalize) {
     baseParts.pop();
     var baseUrl = baseParts.join('/') + '/';
     baseUrl = normalize.convertURIBase(baseUrl, pathname, '/');
-    if (!baseUrl.match(/^\/|([^\:\/]*:)/))
+    if (!baseUrl.match(absUrlRegEx))
       baseUrl = '/' + baseUrl;
     if (baseUrl.substr(baseUrl.length - 1, 1) != '/')
       baseUrl = baseUrl + '/';
@@ -333,7 +335,7 @@ define(['./normalize'], function(normalize) {
   var loadCSS = function(fileUrl, callback, errback) {
 
     //make file url absolute
-    if (fileUrl.substr(0, 1) != '/')
+    if (!fileUrl.match(absUrlRegEx))
       fileUrl = '/' + normalize.convertURIBase(fileUrl, pathname, '/');
 
     get(fileUrl, function(css) {
