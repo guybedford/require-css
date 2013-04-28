@@ -313,18 +313,27 @@ define(['./normalize'], function(normalize) {
     xhr.send(null);
   }
   //uses the <style> load method
-  var stylesheet = document.createElement('style');
-  stylesheet.type = 'text/css';
-  head.appendChild(stylesheet);
-  
-  if (stylesheet.styleSheet)
+  var firstStyleTag = document.createElement('style');
+  firstStyleTag.type = 'text/css';
+  head.appendChild(firstStyleTag);
+  var noOfStyleTags = 1;
+  if (firstStyleTag.styleSheet){
     cssAPI.inject = function(css) {
-      stylesheet.styleSheet.cssText += css;
+    firstStyleTag.styleSheet.cssText += css;
     }
-  else
+  } else {
     cssAPI.inject = function(css) {
-      stylesheet.appendChild(document.createTextNode(css));
+	  var styleTag = null;
+	  if(noOfStyleTags++>32){
+		  styleTag = firstStyleTag;
+	  } else {
+		  styleTag = document.createElement('style');
+		  styleTag.type = 'text/css';
+		  head.appendChild(styleTag);
+	  }
+	  styleTag.appendChild(document.createTextNode(css));
     }
+  }
   // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
 
