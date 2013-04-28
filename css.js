@@ -316,7 +316,7 @@ define(['./normalize'], function(normalize) {
   var styleCnt = 0;
   var curStyle;
   cssAPI.inject = function(css) {
-    if (styleCnt != 32) {
+    if (styleCnt < 31) {
       curStyle = document.createElement('style');
       curStyle.type = 'text/css';
       head.appendChild(curStyle);
