@@ -199,7 +199,8 @@ define(['./normalize'], function(normalize) {
         style = document.createElement('style');
         head.appendChild(style);
       }
-      ieLoadNextImport(style);
+      if (style)
+        ieLoadNextImport(style);
     }
     var ieLoadNextImport = function(style) {
       var curImport = ieQueue.shift();
