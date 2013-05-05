@@ -96,7 +96,7 @@ define(['require', './normalize'], function(req, normalize) {
     var css = loadFile(fileUrl);
 
     // normalize the css (except import statements)
-    css = normalize(css, fileUrl, baseUrl);
+    css = normalize(css, fileUrl, baseUrl, cssBase);
 
     // detect all import statements in the css and normalize
     var importUrls = [];

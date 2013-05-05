@@ -44,7 +44,7 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
   );
   assert(
     'absolute protocol paths work with base conversion',
-    normalize.convertURIBase('some/file', 'baseUrl/', 'http://some.cdn.com/baseUrl/'),
+    normalize.convertURIBase('some/file', 'http://some.cdn.com/baseUrl/', 'baseUrl/'),
     'http://some.cdn.com/baseUrl/some/file'
   );
   console.log('\nTesting Stylesheet Regular Expressions');
@@ -62,6 +62,16 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     'multiple url includes on the same line',
     normalize('src: url("../fonts/font.eot") format("embedded-opentype"), url("../fonts/font.woff") format("woff");', '/base/', '/'),
     'src: url("fonts/font.eot") format("embedded-opentype"), url("fonts/font.woff") format("woff");'
+  );
+  assert(
+    'cssBase can apply to imports',
+    normalize('@import "/some-file"', '/first/', '/second/', 'http://www.my-website.com'),
+    '@import "http://www.my-website.com/some-file"'
+  );
+  assert(
+    'cssBase can apply to urls',
+    normalize('background: url(\'/absolute/source.jpg\');', 'asdf', 'qwer', '/basePath'),
+    'background: url(\'/basePath/absolute/source.jpg\');'
   );
 
   console.log('\n--- Require CSS Tests Complete: ' + passed + ' passed, ' + failed + ' failed. ---\n');
