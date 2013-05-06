@@ -5,7 +5,6 @@
   fileExclusionRegExp: /(^example)|(.git)$/,
   //separateCSS: true,
   optimizeCss: "node",
-  cssBase: 'www',
   map: {
     '*': {
       css: 'require-css/css'

@@ -115,7 +115,7 @@ define(['require', './normalize'], function(req, normalize) {
         continue;
 
       // relative to css base
-      if (importUrl.substr(0, 1) == '/')
+      if (importUrl.substr(0, 1) == '/' && cssBase)
         importUrl = cssBase + importUrl;
       else
         importUrl = baseUrl + importUrl;
@@ -146,11 +146,8 @@ define(['require', './normalize'], function(req, normalize) {
     if (!baseUrl)
       baseUrl = config.baseUrl;
     
-    if (!cssBase) {
-      cssBase = config.cssBase || config.appDir || baseUrl;
-      if (cssBase.substr(cssBase.length - 1, 1) != '/')
-        cssBase += '/';
-    }
+    if (!cssBase)
+      cssBase = config.cssBase;
 
     if (config.modules) {
       //run through the module list - the first one without a layer set is the current layer we are in
