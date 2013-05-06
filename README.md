@@ -107,6 +107,41 @@ Then the optimizer output would be:
 
 -mymodule.js containing:
  style.css and page.css which will be dynamically injected
+ 
+### Configuration Notes
+
+In order for the layer to inject the CSS it will make a runtime require to `css`. It is important to ensure that the
+map configuration locating `css` is provided before this injection in the script.
+
+If using the standard configuration pattern:
+
+main.js:
+```javascript
+  requirejs.config({
+    map: {
+      '*': {
+        'css': 'require-css/css'
+      }
+    }
+  });
+  require(['app']);
+```
+
+then the configuration will be written by the optimizer as the last item in the layer, meaning the `css` module will not be located in
+time for injection.
+
+To ensure this doesn't happen, use the following configuration pattern:
+
+main.js:
+```javascript
+  require(['config'], function() {
+    require(['app']);
+  });
+```
+
+Or build the config first into layer using the `create` and `include` build properties.
+
+[More details here](https://github.com/jrburke/requirejs/pull/595#issuecomment-16346519)
 
 ### Separate File Output
 
