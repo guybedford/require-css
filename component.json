@@ -1,6 +1,6 @@
 {
   "name": "css",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "main": "css.js",
   "ignore": ["example", "test", ".gitignore"]
 }
