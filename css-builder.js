@@ -183,6 +183,10 @@ define(['require', './normalize'], function(req, normalize) {
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
+
+    // Remove media query from URL
+    name = name.replace(/@media=.*/i, '');
+    
     return normalize(name);
   }
   
