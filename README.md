@@ -28,7 +28,7 @@ define(['css!styles/main'], function() {
 * **Option to build separate layer CSS files** A `separateCSS` build parameter allows for built layers to output their css files separately, instead of inline with the JavaScript, for manual inclusion.
 * **CSS compression** CSS redundancy compression is supported through the external library, [csso](https://github.com/css/csso).
 
-[Gittip](http://gittip.com/guybedford)
+<a href="http://gittip.com/guybedford" target="_blank"><img src="http://badgr.co/gittip/guybedford.png"></a>
 
 Installation and Setup
 ----------------------
