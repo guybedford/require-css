@@ -7,10 +7,6 @@ Useful for writing modular CSS dependencies alongside scripts. For an example of
 
 For LESS inclusion, use [require-less](https://github.com/guybedford/require-less), which behaves and builds the css exactly like this module apart from the preprocessing step.
 
-<iframe style="border: 0; margin: 0; padding: 0;"
-        src="https://www.gittip.com/guybedford/widget.html"
-        width="48pt" height="22pt"></iframe>
-
 Overview
 --------
 
@@ -31,6 +27,8 @@ define(['css!styles/main'], function() {
 * **CSS builds** When run as part of a build with the RequireJS optimizer, `css!` dependencies are automatically inlined into the built layer within the JavaScript, fully compatible with layering. CSS injection is performed as soon as the layer is loaded.
 * **Option to build separate layer CSS files** A `separateCSS` build parameter allows for built layers to output their css files separately, instead of inline with the JavaScript, for manual inclusion.
 * **CSS compression** CSS redundancy compression is supported through the external library, [csso](https://github.com/css/csso).
+
+[Gittip](http://gittip.com/guybedford)
 
 Installation and Setup
 ----------------------
