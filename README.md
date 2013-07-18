@@ -7,6 +7,10 @@ Useful for writing modular CSS dependencies alongside scripts. For an example of
 
 For LESS inclusion, use [require-less](https://github.com/guybedford/require-less), which behaves and builds the css exactly like this module apart from the preprocessing step.
 
+<iframe style="border: 0; margin: 0; padding: 0;"
+        src="https://www.gittip.com/guybedford/widget.html"
+        width="48pt" height="22pt"></iframe>
+
 Overview
 --------
 
