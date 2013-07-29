@@ -195,7 +195,7 @@ define(['./normalize'], function(normalize) {
         cb: callback
       });
       style = ieStyles.shift();
-      if (!style && ieStyleCnt++ < 12) {
+      if (!style && ieStyleCnt++ < 31) {
         style = document.createElement('style');
         head.appendChild(style);
       }
