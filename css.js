@@ -401,7 +401,7 @@ define(['./normalize'], function(normalize) {
     if (cssAPI.attachBuffer(resourceId, load))
       return;
 
-    fileUrl = req.toUrl(resourceId);
+    var fileUrl = req.toUrl(resourceId);
     
     if (!alerted && testing) {
       alert(hackLinks ? 'hacking links' : 'not hacking');
