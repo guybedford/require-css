@@ -188,7 +188,7 @@ define(['./normalize'], function(normalize) {
     var ieStyles = [],
       ieQueue = [],
       ieStyleCnt = 0;
-    var ieLoad = function(url, callback) {
+    var ieLoad = function(url, media, callback) {
       var style;
       ieQueue.push({
         url: url,
@@ -197,6 +197,7 @@ define(['./normalize'], function(normalize) {
       style = ieStyles.shift();
       if (!style && ieStyleCnt++ < 31) {
         style = document.createElement('style');
+        if (media) style.media = media;
         head.appendChild(style);
       }
       ieLoadNextImport(style);
@@ -218,17 +219,18 @@ define(['./normalize'], function(normalize) {
   }
 
   // uses the <link> load method
-  var createLink = function(url) {
+  var createLink = function(url, media) {
     var link = document.createElement('link');
     link.type = 'text/css';
     link.rel = 'stylesheet';
     link.href = url;
+    if (media) link.media = media;
     return link;
   }
 
   var noop = function(){}
 
-  cssAPI.linkLoad = function(url, callback) {
+  cssAPI.linkLoad = function(url, media, callback) {
     var timeout = setTimeout(function() {
       if (testing) alert('timeout');
       callback();
@@ -241,25 +243,25 @@ define(['./normalize'], function(normalize) {
       setTimeout(callback, 7);
     }
     if (!hackLinks) {
-      var link = createLink(url);
+      var link = createLink(url, media);
       link.onload = _callback;
       head.appendChild(link);
     }
     // hacks
     else {
       if (engine == 'webkit') {
-        var link = createLink(url);
+        var link = createLink(url, media);
         webkitLoadCheck(link, _callback);
         head.appendChild(link);
       }
       else if (engine == 'gecko') {
         var style = document.createElement('style');
-        style.textContent = '@import "' + url + '"';
+        style.textContent = '@import "' + url + '"' + (media ? ' ' + media : '');
         mozillaLoadCheck(style, _callback);
         head.appendChild(style);
       }
       else if (engine == 'trident')
-        ieLoad(url, _callback);
+        ieLoad(url, media, _callback);
     }
   }
 
@@ -315,10 +317,11 @@ define(['./normalize'], function(normalize) {
   //uses the <style> load method
   var styleCnt = 0;
   var curStyle;
-  cssAPI.inject = function(css) {
+  cssAPI.inject = function(css, media) {
     if (styleCnt < 31) {
       curStyle = document.createElement('style');
       curStyle.type = 'text/css';
+      if (media) curStyle.media = media;
       head.appendChild(curStyle);
       styleCnt++;
     }
@@ -329,7 +332,8 @@ define(['./normalize'], function(normalize) {
   }
   
   // NB add @media query support for media imports
-  var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
+  var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*(all|braille|embossed|handheld|print|projection|screen|speech|tty|tv)*\s*;?/g;
+  // medai types = all, braille, embossed, handheld, print, projection, screen, speech, tty, tv
 
   var pathname = window.location.pathname.split('/');
   pathname.pop();
@@ -384,8 +388,23 @@ define(['./normalize'], function(normalize) {
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
-    
+
     return normalize(name);
+  }
+
+  cssAPI.detectMediaQuery = function(name) {
+    // Regex for detecting media queries
+    var mediaQueryRegEx = /@media=(all|braille|embossed|handheld|print|projection|screen|speech|tty|tv)/i;
+    var media;
+
+    if (result = mediaQueryRegEx.exec(name)) {
+      media = result[1];
+    }
+
+    // Remove media query from URL
+    name = name.replace(/@media=.*/i, '');
+
+    return { name: name, media: media };
   }
   
   var waitSeconds;
@@ -394,14 +413,16 @@ define(['./normalize'], function(normalize) {
     
     waitSeconds = waitSeconds || config.waitSeconds || 7;
 
-    var resourceId = cssId + (!parse ? '.css' : '.less');
+    var css = cssAPI.detectMediaQuery(cssId);
+
+    resourceId = css.name + (!parse ? '.css' : '.less');
 
     // attach the load function to a buffer if there is one in registration
     // if not, we do a full injection load
     if (cssAPI.attachBuffer(resourceId, load))
       return;
 
-    fileUrl = req.toUrl(resourceId);
+    css.url = req.toUrl(resourceId);
     
     if (!alerted && testing) {
       alert(hackLinks ? 'hacking links' : 'not hacking');
@@ -409,14 +430,14 @@ define(['./normalize'], function(normalize) {
     }
 
     if (!parse) {
-      cssAPI.linkLoad(fileUrl, load);
+      cssAPI.linkLoad(css.url, css.media, load);
     }
     else {
-      loadCSS(fileUrl, function(css) {
+      loadCSS(css.url, css.media, function(css, mediaQuery) {
         // run parsing after normalization - since less is a CSS subset this works fine
         if (parse)
           css = parse(css, function(css) {
-            cssAPI.inject(css);
+            cssAPI.inject(css, mediaQuery);
             setTimeout(load, 7);
           });
       });
