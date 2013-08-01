@@ -168,7 +168,7 @@ define(['require', './normalize'], function(req, normalize) {
 
     //external URLS don't get added (just like JS requires)
     if (fileUrl.substr(0, 7) == 'http://' || fileUrl.substr(0, 8) == 'https://')
-      return;
+      return load();
 
     //add to the buffer
     _cssBuffer[name] = loadCSSFile(fileUrl);
