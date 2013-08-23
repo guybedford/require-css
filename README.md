@@ -1,7 +1,7 @@
 require-css
 ===========
 
-RequireJS CSS requiring and optimization.
+RequireJS CSS requiring and optimization
 
 Useful for writing modular CSS dependencies alongside scripts. For an example of widget rendering see [ZestJS](http://zestjs.org).
 
