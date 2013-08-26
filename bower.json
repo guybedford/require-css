@@ -1,5 +1,6 @@
 {
   "name": "require-css",
   "version": "0.0.7",
-  "ignore": ["example", "test", ".gitignore"]
+  "ignore": ["example", "test", ".gitignore"],
+  "main": "require-css.js"
 }
