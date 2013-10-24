@@ -184,38 +184,35 @@ define(['./normalize'], function(normalize) {
     }, 10);
   }
 
-  // ie link detection, as adapted from https://github.com/cujojs/curl/blob/master/src/curl/plugin/css.js
-  if (engine == 'trident' && hackLinks) {
-    var ieStyles = [],
-      ieQueue = [],
-      ieStyleCnt = 0;
-    var ieLoad = function(url, callback) {
-      var style;
-      ieQueue.push({
-        url: url,
-        cb: callback
-      });
-      style = ieStyles.shift();
-      if (!style && ieStyleCnt++ < 31) {
-        style = document.createElement('style');
-        head.appendChild(style);
-      }
-      if (style)
-        ieLoadNextImport(style);
+ if (engine == 'trident' && hackLinks) {
+    var cssStyleSheet;
+
+    var createStyleSheet = function () {
+      var sheet = document.createElement('style');
+      head.appendChild(sheet);
+      cssStyleSheet = document.styleSheets[document.styleSheets.length-1];
     }
-    var ieLoadNextImport = function(style) {
-      var curImport = ieQueue.shift();
-      if (!curImport) {
-        style.onload = noop;
-        ieStyles.push(style);
-        return;  
+
+    if (!cssStyleSheet) {
+      createStyleSheet();
+    }
+
+    var ieLoad = function(url, callback) {
+      if (cssStyleSheet.imports.length === 31) {
+        createStyleSheet();
       }
-      style.onload = function() {
-        curImport.cb(curImport.ss);
-        ieLoadNextImport(style);
-      };
-      var curSheet = style.styleSheet;
-      curImport.ss = curSheet.imports[curSheet.addImport(curImport.url)];
+
+      cssStyleSheet.addImport(url);
+
+      var importedStyleSheet = cssStyleSheet.imports[cssStyleSheet.imports.length - 1];
+
+      var loadInterval = setInterval(function() {
+        try {
+          (importedStyleSheet.cssRules || importedStyleSheet.rules).length;
+            clearInterval(loadInterval);
+            callback();
+        } catch (e){}
+      }, 10);
     }
   }
 
