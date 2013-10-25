@@ -78,21 +78,20 @@ define(function() {
     if (curSheet.addImport) {
       // IE
       curSheet.addImport(url);
-      checkStyle = curSheet.imports[curSheet.imports.length - 1];
+      curSheet.imports[curSheet.imports.length - 1].styleSheet.onload = callback;
     }
     else {
       // Firefox
       curStyle.textContent = '@import "' + url + '";';
-      checkStyle = curSheet;
-    }
 
-    var loadInterval = setInterval(function() {
-      try {
-        (checkStyle.cssRules || checkStyle.rules).length;
-        clearInterval(loadInterval);
-        callback();
-      } catch(e) {}
-    }, 10);
+      var loadInterval = setInterval(function() {
+        try {
+          curSheet.cssRules;
+          clearInterval(loadInterval);
+          callback();
+        } catch(e) {}
+      }, 10);
+    }
   }
 
   // <link> load method
