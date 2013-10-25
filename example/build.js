@@ -4,6 +4,7 @@
   baseUrl: '.',
   fileExclusionRegExp: /(^example)|(.git)$/,
   //separateCSS: true,
+  //buildCSS: false,
   optimizeCss: "node",
   map: {
     '*': {

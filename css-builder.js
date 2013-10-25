@@ -130,6 +130,7 @@ define(['require', './normalize'], function(req, normalize) {
 
     layerBuffer.push(cssBuffer[moduleName]);
     
+    if (config.buildCSS != false)
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
   }
   
@@ -144,11 +145,11 @@ define(['require', './normalize'], function(req, normalize) {
       
       saveFile(outPath, compress(css));
     }
-    else {
+    else if (config.buildCSS != false) {
       if (css == '')
         return;
       write(
-        "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.querySelector('head')[a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n"
+        "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n"
         + "('" + escape(compress(css)) + "');\n"
       );
     }
