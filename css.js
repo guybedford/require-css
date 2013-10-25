@@ -68,17 +68,14 @@ define(function() {
     head.appendChild(curStyle);
   }
   var importLoad = function(url, callback) {
-    if (!curStyle)
-      createStyle();
+    createStyle();
 
     var curSheet = curStyle.styleSheet || curStyle.sheet;
-    if (!curSheet.imports || curSheet.imports.length == 31)
-      createStyle();
 
     if (curSheet.addImport) {
       // IE
       curSheet.addImport(url);
-      curSheet.imports[curSheet.imports.length - 1].styleSheet.onload = callback;
+      curStyle.onload = callback;
     }
     else {
       // Firefox
