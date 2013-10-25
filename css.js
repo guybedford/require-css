@@ -72,24 +72,23 @@ define(function() {
       createStyle();
 
     var curSheet = curStyle.styleSheet || curStyle.sheet;
-    if (!(curSheet && curSheet.imports) || curSheet.imports.length == 31)
+    if (!curSheet.imports || curSheet.imports.length == 31)
       createStyle();
 
-    if (curSheet && curSheet.addImport) {
+    if (curSheet.addImport) {
       // IE
       curSheet.addImport(url);
+      checkStyle = curSheet.imports[curSheet.imports.length - 1];
     }
     else {
       // Firefox
       curStyle.textContent = '@import "' + url + '";';
+      checkStyle = curSheet;
     }
-
-    var checkStyle = curSheet && curSheet.imports ? curSheet.imports[curSheet.imports.length - 1] : curStyle.sheet;
 
     var loadInterval = setInterval(function() {
       try {
         (checkStyle.cssRules || checkStyle.rules).length;
-        alert('IE loaded');
         clearInterval(loadInterval);
         callback();
       } catch(e) {}
