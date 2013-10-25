@@ -71,7 +71,7 @@ define(function() {
     if (!curStyle)
       createStyle();
 
-    var curSheet = curStyle.sheet;
+    var curSheet = curStyle.styleSheet || curStyle.sheet;
     if (!(curSheet && curSheet.imports) || curSheet.imports.length == 31)
       createStyle();
 
@@ -85,7 +85,7 @@ define(function() {
       curStyle.textContent = '@import "' + url + '";';
       var loadInterval = setInterval(function() {
         try {
-          (curStyle.sheet.cssRules || curStyle.sheet.rules).length;
+          (curSheet.cssRules || curSheet.rules).length;
           clearInterval(loadInterval);
           callback();
         } catch(e) {}
