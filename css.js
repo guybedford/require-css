@@ -78,19 +78,22 @@ define(function() {
     if (curSheet && curSheet.addImport) {
       // IE
       curSheet.addImport(url);
-      curSheet.imports[curSheet.imports.length - 1].onload = callback;
     }
     else {
       // Firefox
       curStyle.textContent = '@import "' + url + '";';
-      var loadInterval = setInterval(function() {
-        try {
-          (curSheet.cssRules || curSheet.rules).length;
-          clearInterval(loadInterval);
-          callback();
-        } catch(e) {}
-      }, 10);
     }
+
+    var checkStyle = curSheet && curSheet.imports ? curSheet.imports[curSheet.imports.length - 1] : curStyle.sheet;
+
+    var loadInterval = setInterval(function() {
+      try {
+        (checkStyle.cssRules || checkStyle.rules).length;
+        alert('IE loaded');
+        clearInterval(loadInterval);
+        callback();
+      } catch(e) {}
+    }, 10);
   }
 
   // <link> load method
