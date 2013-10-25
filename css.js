@@ -75,20 +75,22 @@ define(function() {
     if (!(curSheet && curSheet.imports) || curSheet.imports.length == 31)
       createStyle();
 
-    if (curSheet && curSheet.addImport)
+    if (curSheet && curSheet.addImport) {
+      // IE
       curSheet.addImport(url);
-    else
+      curSheet.imports[curSheet.imports.length - 1].onload = callback;
+    }
+    else {
+      // Firefox
       curStyle.textContent = '@import "' + url + '";';
-
-    var checkStyle = curSheet && curSheet.imports ? curSheet.imports[curSheet.imports.length - 1] : curStyle.sheet;
-
-    var loadInterval = setInterval(function() {
-      try {
-        (checkStyle.cssRules || checkStyle.rules).length;
-        clearInterval(loadInterval);
-        callback();
-      } catch(e) {}
-    }, 10);
+      var loadInterval = setInterval(function() {
+        try {
+          (curStyle.sheet.cssRules || curStyle.sheet.rules).length;
+          clearInterval(loadInterval);
+          callback();
+        } catch(e) {}
+      }, 10);
+    }
   }
 
   // <link> load method
