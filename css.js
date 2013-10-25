@@ -21,7 +21,7 @@
  * browserling.com used for virtual testing environment
  *
  * Credit to B Cavalier & J Hann for the IE 6 - 9 method,
- * refined by Martin Cermak
+ * refined with help from Martin Cermak
  * 
  * Sources that helped along the way:
  * - https://developer.mozilla.org/en-US/docs/Browser_detection_using_the_user_agent
@@ -34,8 +34,6 @@ define(function() {
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
 
-  var noop = function(){}
-
   var head = document.getElementsByTagName('head')[0];
 
   var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit\/([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)|MSIE\s([^ ;]*)/) || 0;
@@ -43,7 +41,7 @@ define(function() {
   // use <style> @import load method (IE < 9, Firefox < 18)
   var useImportLoad = false;
   
-  // set to false for explicit <link> load checking when onload doesn't work (Chrome < ?)
+  // set to false for explicit <link> load checking when onload doesn't work perfectly (webkit)
   var useOnload = true;
 
   // trident / msie
@@ -72,18 +70,18 @@ define(function() {
 
     var curSheet = curStyle.styleSheet || curStyle.sheet;
 
-    if (curSheet.addImport) {
-      // IE
+    if (curSheet && curSheet.addImport) {
+      // old IE
       curSheet.addImport(url);
       curStyle.onload = callback;
     }
     else {
-      // Firefox
+      // old Firefox
       curStyle.textContent = '@import "' + url + '";';
 
       var loadInterval = setInterval(function() {
         try {
-          curSheet.cssRules;
+          curStyle.sheet.cssRules;
           clearInterval(loadInterval);
           callback();
         } catch(e) {}
@@ -98,7 +96,7 @@ define(function() {
     link.rel = 'stylesheet';
     if (useOnload)
       link.onload = function() {
-        link.onload = noop;
+        link.onload = function() {};
         // for style dimensions queries, a short delay can still be necessary
         setTimeout(callback, 7);
       }
@@ -125,12 +123,7 @@ define(function() {
   
   cssAPI.load = function(cssId, req, load, config) {
 
-    var fileUrl = req.toUrl(cssId + '.css');
-
-    if (useImportLoad)
-      importLoad(fileUrl, load);
-    else
-      linkLoad(fileUrl, load);
+    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
 
   }
 

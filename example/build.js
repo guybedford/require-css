@@ -17,7 +17,6 @@
   },
   {
     name: 'core-components',
-    separateCSS: true,
     create: true,
     include: ['components/component'], 
   },
