@@ -64,14 +64,9 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     'src: url("fonts/font.eot") format("embedded-opentype"), url("fonts/font.woff") format("woff");'
   );
   assert(
-    'cssBase can apply to imports',
-    normalize('@import "/some-file"', '/first/', '/second/', 'http://www.my-website.com'),
-    '@import "http://www.my-website.com/some-file"'
-  );
-  assert(
-    'cssBase can apply to urls',
-    normalize('background: url(\'/absolute/source.jpg\');', 'asdf', 'qwer', '/basePath'),
-    'background: url(\'/basePath/absolute/source.jpg\');'
+    'absolute URI test',
+    normalize.absoluteURI('/my/file.less', 'http://localhost:8000/'),
+    '/my/file.less'
   );
 
   console.log('\n--- Require CSS Tests Complete: ' + passed + ' passed, ' + failed + ' failed. ---\n');
