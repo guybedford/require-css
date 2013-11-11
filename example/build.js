@@ -20,10 +20,11 @@
     name: 'core-components',
     create: true,
     include: ['components/component'], 
+    exclude: ['require-css/normalize']
   },
   {
     name: 'popup',
-    exclude: ['core-components']
+    exclude: ['core-components', 'require-css/normalize']
   }
   ]
   //name: 'app.js',
