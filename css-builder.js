@@ -5,15 +5,15 @@ define(['require', './normalize'], function(req, normalize) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       try {
         var csso = require.nodeRequire('csso');
-        var csslen = css.length;
-        css = csso.justDoIt(css);
-        console.log('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
-        return css;
       }
       catch(e) {
         console.log('Compression module not installed. Use "npm install csso -g" to enable.');
         return css;
       }
+      var csslen = css.length;
+      css = csso.justDoIt(css);
+      console.log('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
+      return css;
     }
     console.log('Compression not supported outside of nodejs environments.');
     return css;
