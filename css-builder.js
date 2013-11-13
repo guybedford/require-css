@@ -11,7 +11,13 @@ define(['require', './normalize'], function(req, normalize) {
         return css;
       }
       var csslen = css.length;
-      css = csso.justDoIt(css);
+      try {
+        css =  csso.justDoIt(css);
+      }
+      catch(e) {
+        console.log('Compression failed due to a CSS syntax error.');
+        return css;
+      }
       console.log('Compressed CSS output to ' + Math.round(css.length / csslen * 100) + '%.');
       return css;
     }
