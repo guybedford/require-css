@@ -1,6 +1,8 @@
 define(['require', './normalize'], function(req, normalize) {
   var cssAPI = {};
   
+  var isWindows = !!process.platform.match(/^win/);
+
   function compress(css) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       try {
@@ -103,7 +105,11 @@ define(['require', './normalize'], function(req, normalize) {
     //store config
     config = config || _config;
 
-    siteRoot = siteRoot || path.resolve(config.dir || path.dirname(config.out), config.siteRoot || '.') + '/';
+    if (!siteRoot) {
+      siteRoot = path.resolve(config.dir || path.dirname(config.out), config.siteRoot || '.') + '/';
+      if (isWindows)
+        siteRoot = siteRoot.replace(/\\/g, '/');
+    }
 
     //external URLS don't get added (just like JS requires)
     if (name.match(absUrlRegEx))
@@ -112,7 +118,7 @@ define(['require', './normalize'], function(req, normalize) {
     var fileUrl = req.toUrl(name + '.css');
 
     //add to the buffer
-    cssBuffer[name] = normalize(loadFile(fileUrl), fileUrl, siteRoot);
+    cssBuffer[name] = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
 
     load();
   }
