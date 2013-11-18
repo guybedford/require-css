@@ -59,6 +59,16 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     'background: url("../../first/some/test.css")'
   );
   assert(
+    'absolute url detection',
+    normalize.absoluteURI("//font.server.com/static/fonts/opensans.woff", '/first/one/', '/second/one/'),
+    '//font.server.com/static/fonts/opensans.woff'
+  );
+  assert(
+    'absolute url convert base',
+    normalize.convertURIBase("//font.server.com/static/fonts/opensans.woff", '/first/one/', '/second/one/'),
+    '//font.server.com/static/fonts/opensans.woff'
+  );
+  assert(
     'multiple url includes on the same line',
     normalize('src: url("../fonts/font.eot") format("embedded-opentype"), url("../fonts/font.woff") format("woff");', '/base/', '/'),
     'src: url("fonts/font.eot") format("embedded-opentype"), url("fonts/font.woff") format("woff");'

@@ -42,7 +42,7 @@ define(function() {
   // given a relative URI, and two absolute base URIs, convert it from one base to another
   var protocolRegEx = /[^\:\/]*:\/\/([^\/])*/
   function convertURIBase(uri, fromBase, toBase) {
-    if(uri.indexOf("data:") === 0)
+    if(uri.indexOf("data:") === 0 || uri.substr(0,2) == '//')
       return uri;
     uri = removeDoubleSlashes(uri);
     // if toBase specifies a protocol path, ensure this is the same protocol as fromBase, if not
