@@ -14,17 +14,17 @@
   modules: [
   {
     name: 'app',
-    exclude: ['core-components'],
+    exclude: ['app/core-components'],
   },
   {
-    name: 'core-components',
+    name: 'app/core-components',
     create: true,
     include: ['components/component'], 
     exclude: ['require-css/normalize']
   },
   {
     name: 'popup',
-    exclude: ['core-components', 'require-css/normalize']
+    exclude: ['app/core-components', 'require-css/normalize']
   }
   ]
   //name: 'app.js',

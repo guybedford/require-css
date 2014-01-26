@@ -149,17 +149,19 @@ define(['require', './normalize'], function(req, normalize) {
   cssAPI.onLayerEnd = function(write, data) {
     //calculate layer css
     var css = layerBuffer.join('');
+    var outPath = config.appDir ? config.baseUrl + data.name + '.css' : config.out.replace(/(\.js)?$/, '.css');
     
     if (config.separateCSS) {
       console.log('Writing CSS! file: ' + data.name + '\n');
 
-      var outPath = config.appDir ? config.baseUrl + data.name + '.css' : config.out.replace(/(\.js)?$/, '.css');
+      css = normalize(css, siteRoot, outPath);
       
       saveFile(outPath, compress(css));
     }
     else if (config.buildCSS != false) {
       if (css == '')
         return;
+
       write(
         "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n"
         + "('" + escape(compress(css)) + "');\n"

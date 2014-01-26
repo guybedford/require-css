@@ -84,8 +84,10 @@ define(function() {
  
     var nextLoad = ieLoads.shift();
  
-    if (!nextLoad)
+    if (!nextLoad) {
+      ieCurCallback = null;
       return;
+    }
  
     ieCurCallback = nextLoad[1];
     createIeLoad(nextLoad[0]);
