@@ -126,6 +126,20 @@ This will then output all the css to the file `mymodule.css`. This configuration
 
 Optimization is fully compatible with exclude and include.
 
+### Stubbing CSS Module
+
+The RequireJS `stubModules` option allows the `css` plugin to be excluded in production when dynamic CSS requires are not going to be made (which is also entirely viable for certain use cases).
+
+The RequireJS Optimizer Configuration for this is:
+
+```javascript
+{
+  stubModules: ['require-css'],
+}
+```
+
+An exclude to `require-css/normalize` can also be added to the module or layer as well.
+
 ### siteRoot Configuration
 
 When building the CSS, all URIs are renormalized relative to the site root.
@@ -149,6 +163,20 @@ For example, if the site root is `www` and we are building the directory `www/li
 }
 ```
 
+### Almond Configuration
+
+Almond doesn't support the `packages` configuration option. When using Almond, rather configuration RequireCSS with map configuration instead, by including the following configuration in the production app:
+
+```javascript
+  requirejs.config({
+    map: {
+      '*': {
+        css: 'require-css/css'
+      }
+    }
+  });
+```
+
 ### Disabling the Build
 
 To disable any CSS build entirely, use the configuration option `buildCSS`:
@@ -164,7 +192,7 @@ To disable any CSS build entirely, use the configuration option `buildCSS`:
 }
 ```
 
-CSS requires will then be left in the source "as is".
+CSS requires will then be left in the source "as is". This shouldn't be used with `stubModules`.
 
 CSS Compression
 ---------------
