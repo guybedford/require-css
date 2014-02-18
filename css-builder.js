@@ -1,8 +1,6 @@
 define(['require', './normalize'], function(req, normalize) {
   var cssAPI = {};
   
-  var isWindows = !!process.platform.match(/^win/);
-
   function compress(css) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       try {
@@ -107,24 +105,29 @@ define(['require', './normalize'], function(req, normalize) {
   var cssBuffer = {};
 
   cssAPI.load = function(name, req, load, _config) {
-
+    var isWindows;
+    var fileUrl = req.toUrl(name + '.css');
     //store config
     config = config || _config;
-
-    if (!siteRoot) {
-      siteRoot = path.resolve(config.dir || path.dirname(config.out), config.siteRoot || '.') + '/';
-      if (isWindows)
-        siteRoot = siteRoot.replace(/\\/g, '/');
-    }
 
     //external URLS don't get added (just like JS requires)
     if (name.match(absUrlRegEx))
       return load();
 
-    var fileUrl = req.toUrl(name + '.css');
+    if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
+      isWindows = !!process.platform.match(/^win/);
 
-    //add to the buffer
-    cssBuffer[name] = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
+      if (!siteRoot) {
+        siteRoot = path.resolve(config.dir || path.dirname(config.out), config.siteRoot || '.') + '/';
+        if (isWindows)
+          siteRoot = siteRoot.replace(/\\/g, '/');
+      }
+      //add to the buffer
+      cssBuffer[name] = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
+    } else {
+      // Couldn't find the api in java to dupe the same logic for siteRoot and isWindows, so punting for now since neither apply to us
+      cssBuffer[name] = normalize(loadFile(fileUrl), fileUrl, fileUrl);
+    }
 
     load();
   }
@@ -154,14 +157,13 @@ define(['require', './normalize'], function(req, normalize) {
     if (config.separateCSS) {
       console.log('Writing CSS! file: ' + data.name + '\n');
 
-      css = normalize(css, siteRoot, outPath);
-      
+      css = normalize(css, siteRoot, outPath);      
       saveFile(outPath, compress(css));
     }
     else if (config.buildCSS != false) {
       if (css == '')
         return;
-
+      
       write(
         "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n"
         + "('" + escape(compress(css)) + "');\n"
