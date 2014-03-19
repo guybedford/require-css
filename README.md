@@ -22,6 +22,7 @@ Fully compatible in IE 6+, Chrome 3+, Firefox 3.5+, Opera 10+, iOS.
 
 * **CSS builds** When run as part of a build with the RequireJS optimizer, `css!` dependencies are automatically inlined into the built layer within the JavaScript, fully compatible with layering. CSS injection is performed as soon as the layer is loaded.
 * **Option to build separate layer CSS files** A `separateCSS` build parameter allows for built layers to output their css files separately, instead of inline with the JavaScript, for manual inclusion.
+You can specify the css output path with parameter `cssOut`. By default the css output locate in the same path and same name with different extension(from .js to .css) as javascript output.
 * **CSS compression** CSS redundancy compression is supported through the external library, [csso](https://github.com/css/csso).
 
 Installation and Setup
