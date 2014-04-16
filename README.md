@@ -134,11 +134,11 @@ The RequireJS Optimizer Configuration for this is:
 
 ```javascript
 {
-  stubModules: ['require-css'],
+  pragmasOnSave: {
+    excludeRequireCss: true
+  }
 }
 ```
-
-An exclude to `require-css/normalize` can also be added to the module or layer as well.
 
 ### siteRoot Configuration
 
