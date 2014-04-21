@@ -43,6 +43,16 @@ map: {
 }
 ```
 
+If you put the `require-css` directory in a path other than the default `baseUrl` location, you **MUST** add the following [paths configuration](http://requirejs.org/docs/api.html#config-paths) in RequireJS:
+
+```javascript
+paths: {
+  'require-css': 'your/path/to/require-css'
+}
+```
+
+This configuration is **required** to location `normalize.js` and `css-builder.js` files for optimization.
+
 Use Cases and Benefits
 ----------------------
 
@@ -86,7 +96,7 @@ Optimizer configuration:
   modules: [
   {
     name: 'mymodule',
-    exclude: ['css/normalize']
+    exclude: ['require-css/normalize']
   }
   ]
 }
@@ -105,7 +115,7 @@ Then the optimizer output would be:
 -mymodule.js containing:
  style.css and page.css which will be dynamically injected
 
-The `css/normalize` exclude is needed due to [r.js issue #289](https://github.com/jrburke/r.js/issues/289)
+The `require-css/normalize` exclude is needed due to [r.js issue #289](https://github.com/jrburke/r.js/issues/289)
  
 ### Separate File Output
 
@@ -134,7 +144,7 @@ The RequireJS Optimizer Configuration for this is:
 
 ```javascript
 {
-  stubModules: ['require-css'],
+  stubModules: ['require-css/css'],
 }
 ```
 
