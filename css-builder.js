@@ -149,7 +149,7 @@ define(['require', './normalize'], function(req, normalize) {
   cssAPI.onLayerEnd = function(write, data) {
     //calculate layer css
     var css = layerBuffer.join('');
-    var outPath = config.appDir ? config.baseUrl + data.name + '.css' : config.out.replace(/(\.js)?$/, '.css');
+    var outPath = config.dir ? config.baseUrl + data.name + '.css' : config.out.replace(/(\.js)?$/, '.css');
     
     if (config.separateCSS) {
       console.log('Writing CSS! file: ' + data.name + '\n');
