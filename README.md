@@ -1,13 +1,13 @@
 require-css
 ===========
 
+<a style="text-align: right;" href="https://www.gittip.com/guybedford/"><img src="http://img.shields.io/gittip/guybedford.svg" /></a>
+
 RequireJS CSS requiring and optimization, with almond support.
 
 Useful for writing modular CSS dependencies alongside scripts. For an example of widget rendering see [ZestJS](http://zestjs.org).
 
 For LESS inclusion, use [require-less](https://github.com/guybedford/require-less), which behaves and builds the css exactly like this module apart from the preprocessing step.
-
-<a href="https://www.gittip.com/guybedford/"><img src="http://img.shields.io/gittip/guybedford.svg" /></a>
 
 Overview
 --------
