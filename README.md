@@ -1,8 +1,6 @@
 require-css
 ===========
 
-<a style="text-align: right; display: block;" href="https://www.gittip.com/guybedford/"><img src="http://img.shields.io/gittip/guybedford.svg" /></a>
-
 RequireJS CSS requiring and optimization, with almond support.
 
 Useful for writing modular CSS dependencies alongside scripts. For an example of widget rendering see [ZestJS](http://zestjs.org).
@@ -44,6 +42,8 @@ map: {
   }
 }
 ```
+
+<a href="https://www.gittip.com/guybedford/"><img src="http://img.shields.io/gittip/guybedford.svg" /></a>
 
 Use Cases and Benefits
 ----------------------
