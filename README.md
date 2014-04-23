@@ -1,7 +1,7 @@
 require-css
 ===========
 
-<a style="text-align: right;" href="https://www.gittip.com/guybedford/"><img src="http://img.shields.io/gittip/guybedford.svg" /></a>
+<a style="text-align: right; display: block;" href="https://www.gittip.com/guybedford/"><img src="http://img.shields.io/gittip/guybedford.svg" /></a>
 
 RequireJS CSS requiring and optimization, with almond support.
 
