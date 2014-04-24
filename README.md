@@ -128,15 +128,15 @@ This will then output all the css to the file `mymodule.css`. This configuration
 
 Optimization is fully compatible with exclude and include.
 
-### Concatenate CSS
+### IE8 and 9 Selector Limit
 
-By default, during the build process, all CSS documents required in a layer are concatenated into a single document. If the `separateCSS` configuration flag is set to true, the result will be output to a single external CSS file for the given layer. Otherwise, the CSS document will be inlined via a single style tag in the DOM. 
+In IE9 and below, there is a maximum limit of 4095 selectors per stylesheet.
 
-There are times where you may not want this to occur if for instance you need to support IE9 and below where this concatenation may cause more than 4095 selectors to be created in a single document which is not supported on that platform (see http://support.microsoft.com/kb/262161). Set the `concatCSS` flag to false to prevent concatentation. For inlined CSS, this simply results in the creation of 1 inline style block per required CSS document in a layer, rather than 1 style block per layer. 
+In order to avoid this limit, CSS concatenation can be disabled entirely with the `IESelectorLimit` option.
 
 ```javascript
 {
-  concatCSS: false,
+  IESelectorLimit: true,
   modules: [
   {
     name: 'mymodule'
@@ -144,6 +144,11 @@ There are times where you may not want this to occur if for instance you need to
   ]
 }
 ```
+
+Ideally build layers would avoid this limit entirely by naturally being designed to not reach it. This option is really only as a fix when nothing else
+is possible as it will degrade injection performance.
+
+This option is also not compatible with the `separateCSS` option.
 
 ### Stubbing CSS Module
 
