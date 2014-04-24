@@ -150,11 +150,9 @@ is possible as it will degrade injection performance.
 
 This option is also not compatible with the `separateCSS` option.
 
-### Stubbing CSS Module
+### Excluding the CSS Module in Production
 
-The RequireJS `stubModules` option allows the `css` plugin to be excluded in production when dynamic CSS requires are not going to be made (which is also entirely viable for certain use cases).
-
-The RequireJS Optimizer Configuration for this is:
+When dynamic CSS requires are not going to be made in production, a minimal version of RequireCSS can be written by setting a pragma for the build:
 
 ```javascript
 {
