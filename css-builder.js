@@ -153,9 +153,18 @@ define(['require', './normalize'], function(req, normalize) {
     if (config.separateCSS) {
       console.log('Writing CSS! file: ' + data.name + '\n');
 
-      var outPath = config.appDir ? config.baseUrl + data.name + '.css' : config.out.replace(/(\.js)?$/, '.css');
+      fs.mkdirSync(data.name)
+      var outPath = config.dir ? path.resolve(config.dir, config.baseUrl, data.name + '.css') : config.out.replace(/(\.js)?$/, '.css');
 
-      saveFile(outPath, compress(css));
+      var css = layerBuffer.join('');
+
+      if (fs.existsSync(outPath))
+        console.log('RequireCSS: Warning, separateCSS module path "' + outPath + '" already exists and is being replaced by the layer CSS.');
+
+      process.nextTick(function() {
+        saveFile(outPath, compress(css));  
+      });
+      
     }
     else if (config.buildCSS != false) {
       var styles = config.IESelectorLimit ? layerBuffer : [layerBuffer.join('')];
