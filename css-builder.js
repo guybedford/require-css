@@ -122,9 +122,23 @@ define(['require', './normalize'], function(req, normalize) {
       return load();
 
     var fileUrl = req.toUrl(name + '.css');
+    if (isWindows)
+      fileUrl = fileUrl.replace(/\\/g, '/');
+
+    // rebase to the output directory if based on the source directory;
+    // baseUrl points always to the ouptut directory, fileUrl only if
+    // it is not prefixed by a computed path (relative too)
+    var fileSiteUrl = fileUrl;
+    if (fileSiteUrl.indexOf(baseUrl) < 0) {
+      var appRoot = req.toUrl(config.appDir);
+      if (isWindows)
+        appRoot = appRoot.replace(/\\/g, '/');
+      if (fileSiteUrl.indexOf(appRoot) == 0)
+        fileSiteUrl = siteRoot + fileSiteUrl.substring(appRoot.length);
+    }
 
     //add to the buffer
-    cssBuffer[name] = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
+    cssBuffer[name] = normalize(loadFile(fileUrl), fileSiteUrl, siteRoot);
 
     load();
   }
