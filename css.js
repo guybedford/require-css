@@ -48,6 +48,8 @@ define(function() {
   // set to false for explicit <link> load checking when onload doesn't work perfectly (webkit)
   var useOnload = true;
 
+  var cssRuleRegExp = /(#|\.)(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?=[^}]+{)/g;
+
   // trident / msie
   if (engine[1] || engine[7]) {
     useImportLoad = parseInt(engine[1]) < 6 || parseInt(engine[7]) <= 9;
@@ -145,7 +147,7 @@ define(function() {
       var loadInterval = setInterval(function() {
         for (var i = 0; i < document.styleSheets.length; i++) {
           var sheet = document.styleSheets[i];
-          if (sheet.href == link.href) {
+          if (sheet.href === link.href) {
             clearInterval(loadInterval);
             return callback();
           }
@@ -157,9 +159,39 @@ define(function() {
     head.appendChild(link);
   };
 
-//>>excludeEnd('excludeRequireCss')
+  var loadFromData = function (req, cssPath, prefixName, callback) {
+    req(['text!' + req.toUrl(cssPath + '.css')], function (css) {
+      var prefixedCss = prefixCss(css, prefixName);
+      var node = document.createElement('style');
+
+      node.setAttribute('rel', 'stylesheet');
+      node.dataset.module = prefixName;
+      node.innerHTML = prefixedCss;
+      head.appendChild(node);
+
+      callback();
+    });
+   };
+
+   var prefixCss = function (css, moduleName) {
+    // 0: ".Journal"
+    // 1: "."
+    // 2: "Journal"
+    return css.replace(cssRuleRegExp, function (matchedSelector, classOrId, selectorName) {
+      var moduleRootSelector = new RegExp('(?:^|\\s)(?:\\.|#)' + moduleName + '(?:\\s|$)');
+       // Do not replace module root selector to avoid this:
+      // .MyModule__MyModule { ... }
+      if (matchedSelector.match(moduleRootSelector)) {
+        return matchedSelector;
+      } else {
+        return classOrId + moduleName + '__' + selectorName;
+      }
+    });
+  };
+
+  //>>excludeEnd('excludeRequireCss')
   cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 4, 4) == '.css') {
+    if (name.substr(name.length - 4, 4) === '.css') {
       name = name.substr(0, name.length - 4);
     }
 
@@ -168,10 +200,18 @@ define(function() {
 
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   cssAPI.load = function(cssId, req, load, config) {
+    var prefixed = cssId.match(/prefix:(.*):(.*)/);
 
-    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
+    if (prefixed) {
+      var prefixName = prefixed[1];
+      var cssPath = prefixed[2];
 
+      loadFromData(req, cssPath, prefixName, load);
+    } else {
+      (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
+    }
   };
+
 
 //>>excludeEnd('excludeRequireCss')
   return cssAPI;
