@@ -122,18 +122,40 @@ define(['require', './normalize'], function(req, normalize) {
       return load();
 
     var fileUrl = req.toUrl(name + '.css');
+    var cssStr = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
+
+    function transform(css) {
+      // The developer can add some transformFunctions to transform the css once read
+      var cssConfig = config.css || {};
+      var transforms = cssConfig.transformEach || [];
+      if (! (transforms instanceof Array)) {
+        transforms = [transforms];
+      }
+      transforms.forEach(function (transform) {
+        switch (typeof transform) {
+          case 'function':
+            css = transform(css);
+            break;
+          case 'string':
+            // must be a moduleId for module that exports function
+            var module = require.nodeRequire(require.toUrl(transform));
+            css = module(css);
+            break;
+        }
+      });
+      return css;
+    }
 
     //add to the buffer
-    cssBuffer[name] = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
-
+    cssBuffer[name] = transform(cssStr);
     load();
-  }
+  };
   
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
     return normalize(name);
-  }
+  };
   
   cssAPI.write = function(pluginName, moduleName, write, parse) {
     //external URLS don't get added (just like JS requires)

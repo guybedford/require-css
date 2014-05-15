@@ -214,6 +214,24 @@ To disable any CSS build entirely, use the configuration option `buildCSS`:
 }
 ```
 
+### Transforming on Build
+
+You can specify a function or module name of a module that exports a function that will be called with the css string of each require, performs a sync operation, and returns a new string. The result of this function is what will actually be put inlined in your out file.
+
+```javascript
+{
+  buildCSS: false,
+  css: {
+    transformEach: [function (css) { return css; }, 'moduleNameOfFunction']
+  },
+  modules: [
+  {
+    name: 'mymodule'
+  }
+  ]
+}
+```
+
 CSS requires will then be left in the source "as is". This shouldn't be used with `stubModules`.
 
 CSS Compression
