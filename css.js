@@ -30,7 +30,7 @@
  *
  */
 
-define(function() {
+define(['./parse-module-path', './transform-css'], function(parseModulePath, getTransformedCss) {
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
@@ -81,7 +81,7 @@ define(function() {
     }
     curSheet.addImport(url);
     curStyle.onload = processIeLoad;
-  }
+  };
   var processIeLoad = function() {
     ieCurCallback();
  
@@ -121,7 +121,7 @@ define(function() {
         } catch(e) {}
       }, 10);
     }
-  }
+  };
 
   // <link> load method
   var linkLoad = function(url, callback) {
@@ -148,6 +148,18 @@ define(function() {
     head.appendChild(link);
   }
 
+  // insert a string of css in the page via textNode of style element
+  var insertCss = function (cssStr) {
+      var styleEl=document.createElement('style');
+      styleEl.type='text/css';
+      if (styleEl.styleSheet) {
+        styleEl.styleSheet.cssText = cssStr;
+      } else {
+        styleEl.appendChild(document.createTextNode(cssStr));
+      }
+      document.getElementsByTagName('head')[0].appendChild(styleEl);
+  };
+
 //>>excludeEnd('excludeRequireCss')
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 4, 4) == '.css')
@@ -157,10 +169,69 @@ define(function() {
   }
 
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
+
+  // load a file url and get the contents as a string
+  function loadFile(require, url, callback) {
+    var textModule = 'text!' + url;
+    require([textModule], function () {
+      callback.apply(this, arguments);
+    });
+  }
+
+  // get the transformation functions (or module strings) that should be used in requirejs
+  function getTransformEaches(require, config, key) {
+    var cssConfig = config.css || {};
+    var transformEaches = cssConfig.transformEach;
+    if ( ! (transformEaches instanceof Array)) {
+      transformEaches = [transformEaches];
+    }
+    var transforms = transformEaches.map(function (transformEach) {
+      // It could just be a function to use for all platforms
+      if (typeof transformEach === 'function') {
+        return transformEach;
+      }
+      // or it could be an object with requirejs and node keys
+      var keyed = transformEach[key];
+      if (keyed) {
+        return keyed;
+      }
+      // dont support this
+      throw new Error("Couldn't extract transform from " + transformEach);
+    });
+    return transforms;
+  }
+
   cssAPI.load = function(cssId, req, load, config) {
+    getTransformedCss(
+      req,
+      loadFile.bind({}, req),
+      getTransformEaches.bind({}, req, config, 'requirejs'),
+      cssId,
+      withTransformedCss
+      );
+    function withTransformedCss(cssStr) {
+      insertCss(cssStr);
+      load();
+    }
+    // var parsed = parseModulePath(cssId);
+    // var loadUrl = (useImportLoad ? importLoad : linkLoad);
+    // var cssPath = parsed.cssId + '.css';
+    // var cssUrl = req.toUrl(cssPath);
 
-    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
+    // // If transforms are configured, then we can't just import
+    // // based on the URL. Need to get via text plugin
+    // var cssConfig = config.css || {};
+    // var transformsForEach = cssConfig.transformEach;
 
+    // if (transformsForEach) {
+    //   transform(cssUrl, transformsForEach, parsed.params || {}, function (cssStr) {
+    //     insertCss(cssStr);
+    //     load();
+    //   });
+    //   return;
+    //}
+
+    //loadUrl(cssUrl, load);
   }
 
 //>>excludeEnd('excludeRequireCss')

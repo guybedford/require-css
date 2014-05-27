@@ -1,4 +1,5 @@
-define(['require', './normalize'], function(req, normalize) {
+define(['require', './normalize', './parse-module-path'],
+function(req, normalize, parseModulePath) {
   var cssAPI = {};
   
   var isWindows = !!process.platform.match(/^win/);
@@ -106,8 +107,41 @@ define(['require', './normalize'], function(req, normalize) {
   var layerBuffer = [];
   var cssBuffer = {};
 
-  cssAPI.load = function(name, req, load, _config) {
+  /**
+   * Transform the CSS based on config.css.transformEach
+   */
+  function transform(transforms, css, params, config) {
+    // The developer can add some transformFunctions to transform the css once read
+    if (! (transforms instanceof Array)) {
+      transforms = [transforms];
+    }
 
+    var nodeTransforms = transforms.map(function (t) {
+      return t.node;
+    });
+    nodeTransforms.forEach(function (transform) {
+      switch (typeof transform) {
+        case 'function':
+          css = transform(css, params);
+          break;
+        case 'string':
+          // must be a moduleId for module that exports function
+          var module = require.nodeRequire(require.toUrl(transform));
+          css = module(css, params, config);
+          break;
+      }
+    });
+    return css;
+  }
+  // Use configured fns to transform each required
+  // css! module
+  var transformEach = function (css, params, config) {
+    var cssConfig = config.css || {};
+    var transformEachFns = cssConfig.transformEach || [];
+    return transform(transformEachFns, css, params, config);
+  };
+
+  cssAPI.load = function(name, req, load, _config) {
     //store config
     config = config || _config;
 
@@ -121,33 +155,11 @@ define(['require', './normalize'], function(req, normalize) {
     if (name.match(absUrlRegEx))
       return load();
 
-    var fileUrl = req.toUrl(name + '.css');
+    var parsed = parseModulePath(name);
+    var fileUrl = req.toUrl(parsed.cssId + '.css');
     var cssStr = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
-
-    function transform(css) {
-      // The developer can add some transformFunctions to transform the css once read
-      var cssConfig = config.css || {};
-      var transforms = cssConfig.transformEach || [];
-      if (! (transforms instanceof Array)) {
-        transforms = [transforms];
-      }
-      transforms.forEach(function (transform) {
-        switch (typeof transform) {
-          case 'function':
-            css = transform(css);
-            break;
-          case 'string':
-            // must be a moduleId for module that exports function
-            var module = require.nodeRequire(require.toUrl(transform));
-            css = module(css);
-            break;
-        }
-      });
-      return css;
-    }
-
     //add to the buffer
-    cssBuffer[name] = transform(cssStr);
+    cssBuffer[name] = transformEach(cssStr, parsed.params, _config);
     load();
   };
   
@@ -169,6 +181,7 @@ define(['require', './normalize'], function(req, normalize) {
   }
   
   cssAPI.onLayerEnd = function(write, data) {
+    debugger;
     if (config.separateCSS && config.IESelectorLimit)
       throw 'RequireCSS: separateCSS option is not compatible with ensuring the IE selector limit';
 
@@ -193,6 +206,7 @@ define(['require', './normalize'], function(req, normalize) {
       for (var i = 0; i < styles.length; i++) {
         if (styles[i] == '')
           return;
+        console.log('writing something');
         write(
           "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n"
           + "('" + escape(compress(styles[i])) + "');\n"
