@@ -1,5 +1,5 @@
-define(['require', './normalize', './parse-module-path'],
-function(req, normalize, parseModulePath) {
+define(['require', './normalize', './parse-module-path', './transform-css'],
+function(req, normalize, parseModulePath, getTransformedCss) {
   var cssAPI = {};
   
   var isWindows = !!process.platform.match(/^win/);
@@ -141,6 +141,12 @@ function(req, normalize, parseModulePath) {
     return transform(transformEachFns, css, params, config);
   };
 
+  // Load a file path on disk
+  function loadFileAsync(path, callback) {
+    var str = loadFile(path);
+    callback(str);
+  }
+
   cssAPI.load = function(name, req, load, _config) {
     //store config
     config = config || _config;
@@ -155,12 +161,25 @@ function(req, normalize, parseModulePath) {
     if (name.match(absUrlRegEx))
       return load();
 
-    var parsed = parseModulePath(name);
-    var fileUrl = req.toUrl(parsed.cssId + '.css');
-    var cssStr = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
-    //add to the buffer
-    cssBuffer[name] = transformEach(cssStr, parsed.params, _config);
-    load();
+    function nodeReq(depNames, callback) {
+      var depUrls = depNames.map(req.toUrl);
+      var deps = depUrls.map(require.nodeRequire);
+      callback.apply({}, deps);
+    }
+    console.log('transforming css for', name);
+    getTransformedCss(
+      nodeReq,
+      req.toUrl,
+      loadFileAsync,
+      getTransformedCss.getTransformEaches(config, 'node'),
+      name,
+      function withTransformedCss(cssStr) {
+        var parsed = parseModulePath(name);
+        var fileUrl = req.toUrl(parsed.cssId + '.css');
+        var normalizedCssStr = normalize(cssStr, isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
+        cssBuffer[name] = normalizedCssStr;
+        load();
+      });
   };
   
   cssAPI.normalize = function(name, normalize) {
@@ -181,15 +200,17 @@ function(req, normalize, parseModulePath) {
   }
   
   cssAPI.onLayerEnd = function(write, data) {
-    debugger;
     if (config.separateCSS && config.IESelectorLimit)
       throw 'RequireCSS: separateCSS option is not compatible with ensuring the IE selector limit';
 
     if (config.separateCSS) {
       console.log('Writing CSS! file: ' + data.name + '\n');
-
-      fs.mkdirSync(data.name)
-      var outPath = config.dir ? path.resolve(config.dir, config.baseUrl, data.name + '.css') : config.out.replace(/(\.js)?$/, '.css');
+      var outPath;
+      if (config.dir) {
+        outPath = path.resolve(config.dir, config.baseUrl, data.name + '.css');
+      } else {
+        outPath = config.out.replace(/(\.js)?$/, '.css');
+      }
 
       var css = layerBuffer.join('');
 

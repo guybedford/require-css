@@ -178,34 +178,12 @@ define(['./parse-module-path', './transform-css'], function(parseModulePath, get
     });
   }
 
-  // get the transformation functions (or module strings) that should be used in requirejs
-  function getTransformEaches(require, config, key) {
-    var cssConfig = config.css || {};
-    var transformEaches = cssConfig.transformEach;
-    if ( ! (transformEaches instanceof Array)) {
-      transformEaches = [transformEaches];
-    }
-    var transforms = transformEaches.map(function (transformEach) {
-      // It could just be a function to use for all platforms
-      if (typeof transformEach === 'function') {
-        return transformEach;
-      }
-      // or it could be an object with requirejs and node keys
-      var keyed = transformEach[key];
-      if (keyed) {
-        return keyed;
-      }
-      // dont support this
-      throw new Error("Couldn't extract transform from " + transformEach);
-    });
-    return transforms;
-  }
-
   cssAPI.load = function(cssId, req, load, config) {
     getTransformedCss(
       req,
+      req.toUrl,
       loadFile.bind({}, req),
-      getTransformEaches.bind({}, req, config, 'requirejs'),
+      getTransformedCss.getTransformEaches(config, 'requirejs'),
       cssId,
       withTransformedCss
       );
@@ -213,25 +191,6 @@ define(['./parse-module-path', './transform-css'], function(parseModulePath, get
       insertCss(cssStr);
       load();
     }
-    // var parsed = parseModulePath(cssId);
-    // var loadUrl = (useImportLoad ? importLoad : linkLoad);
-    // var cssPath = parsed.cssId + '.css';
-    // var cssUrl = req.toUrl(cssPath);
-
-    // // If transforms are configured, then we can't just import
-    // // based on the URL. Need to get via text plugin
-    // var cssConfig = config.css || {};
-    // var transformsForEach = cssConfig.transformEach;
-
-    // if (transformsForEach) {
-    //   transform(cssUrl, transformsForEach, parsed.params || {}, function (cssStr) {
-    //     insertCss(cssStr);
-    //     load();
-    //   });
-    //   return;
-    //}
-
-    //loadUrl(cssUrl, load);
   }
 
 //>>excludeEnd('excludeRequireCss')
