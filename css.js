@@ -30,7 +30,7 @@
  *
  */
 
-define(function() {
+define(['./parse-module-path', './transform-css'], function(parseModulePath, getTransformedCss) {
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
@@ -81,7 +81,7 @@ define(function() {
     }
     curSheet.addImport(url);
     curStyle.onload = processIeLoad;
-  }
+  };
   var processIeLoad = function() {
     ieCurCallback();
  
@@ -121,7 +121,7 @@ define(function() {
         } catch(e) {}
       }, 10);
     }
-  }
+  };
 
   // <link> load method
   var linkLoad = function(url, callback) {
@@ -148,6 +148,18 @@ define(function() {
     head.appendChild(link);
   }
 
+  // insert a string of css in the page via textNode of style element
+  var insertCss = function (cssStr) {
+      var styleEl=document.createElement('style');
+      styleEl.type='text/css';
+      if (styleEl.styleSheet) {
+        styleEl.styleSheet.cssText = cssStr;
+      } else {
+        styleEl.appendChild(document.createTextNode(cssStr));
+      }
+      document.getElementsByTagName('head')[0].appendChild(styleEl);
+  };
+
 //>>excludeEnd('excludeRequireCss')
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 4, 4) == '.css')
@@ -156,11 +168,33 @@ define(function() {
     return normalize(name);
   }
 
+  // This is the last one included when excludeRequireCss is true
+  cssAPI.load = function(cssId, req, load) {
+    load();
+  };
+
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
+
+  // load a file url and get the contents as a string
+  function loadModule(require, module, callback) {
+    var textModule = 'text!' + module;
+    require([textModule], function () {
+      callback.apply(this, arguments);
+    });
+  }
+
   cssAPI.load = function(cssId, req, load, config) {
-
-    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
-
+    getTransformedCss(
+      req,
+      loadModule.bind({}, req),
+      getTransformedCss.getTransformEaches(config, 'requirejs'),
+      cssId,
+      withTransformedCss
+      );
+    function withTransformedCss(cssStr) {
+      insertCss(cssStr);
+      load();
+    }
   }
 
 //>>excludeEnd('excludeRequireCss')

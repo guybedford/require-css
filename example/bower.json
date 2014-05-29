@@ -1,0 +1,19 @@
+{
+  "name": "example",
+  "version": "0.0.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "cajon": "~0.1.11",
+    "rework": "gobengo/rework#~0.21.0"
+  },
+  "devDependencies": {
+    "requirejs-plugins": "~1.0.2",
+    "almond": "0.2.9"
+  }
+}

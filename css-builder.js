@@ -1,4 +1,5 @@
-define(['require', './normalize'], function(req, normalize) {
+define(['require', './normalize', './parse-module-path', './transform-css'],
+function(req, normalize, parseModulePath, getTransformedCss) {
   var cssAPI = {};
   
   var isWindows = !!process.platform.match(/^win/);
@@ -106,8 +107,13 @@ define(['require', './normalize'], function(req, normalize) {
   var layerBuffer = [];
   var cssBuffer = {};
 
-  cssAPI.load = function(name, req, load, _config) {
+  // Load a file path on disk
+  function loadModuleAsync(toUrl, module, callback) {
+    var str = loadFile(toUrl(module));
+    callback(str);
+  }
 
+  cssAPI.load = function(name, req, load, _config) {
     //store config
     config = config || _config;
 
@@ -121,19 +127,31 @@ define(['require', './normalize'], function(req, normalize) {
     if (name.match(absUrlRegEx))
       return load();
 
-    var fileUrl = req.toUrl(name + '.css');
-
-    //add to the buffer
-    cssBuffer[name] = normalize(loadFile(fileUrl), isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
-
-    load();
-  }
+    function nodeReq(depNames, callback) {
+      var depUrls = depNames.map(req.toUrl);
+      var deps = depUrls.map(require.nodeRequire);
+      callback.apply({}, deps);
+    }
+    console.log('transforming css for', name);
+    getTransformedCss(
+      nodeReq,
+      loadModuleAsync.bind({}, req.toUrl),
+      getTransformedCss.getTransformEaches(config, 'node'),
+      name,
+      function withTransformedCss(cssStr) {
+        var parsed = parseModulePath(name);
+        var fileUrl = req.toUrl(parsed.cssId + '.css');
+        var normalizedCssStr = normalize(cssStr, isWindows ? fileUrl.replace(/\\/g, '/') : fileUrl, siteRoot);
+        cssBuffer[name] = normalizedCssStr;
+        load();
+      });
+  };
   
   cssAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 4, 4) == '.css')
       name = name.substr(0, name.length - 4);
     return normalize(name);
-  }
+  };
   
   cssAPI.write = function(pluginName, moduleName, write, parse) {
     //external URLS don't get added (just like JS requires)
@@ -152,9 +170,12 @@ define(['require', './normalize'], function(req, normalize) {
 
     if (config.separateCSS) {
       console.log('Writing CSS! file: ' + data.name + '\n');
-
-      fs.mkdirSync(data.name)
-      var outPath = config.dir ? path.resolve(config.dir, config.baseUrl, data.name + '.css') : config.out.replace(/(\.js)?$/, '.css');
+      var outPath;
+      if (config.dir) {
+        outPath = path.resolve(config.dir, config.baseUrl, data.name + '.css');
+      } else {
+        outPath = config.out.replace(/(\.js)?$/, '.css');
+      }
 
       var css = layerBuffer.join('');
 
@@ -171,6 +192,7 @@ define(['require', './normalize'], function(req, normalize) {
       for (var i = 0; i < styles.length; i++) {
         if (styles[i] == '')
           return;
+        console.log('writing something');
         write(
           "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n"
           + "('" + escape(compress(styles[i])) + "');\n"

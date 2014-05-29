@@ -1,22 +1,16 @@
 <!doctype html>
-<html>
-<script type='text/javascript' src='../../../require.js'></script>
-<script>
-  require.config({
-    map: {
-      '*': {
-        'css': 'require-css/css'
-      } 
-    }
-  });
-</script>
-
+<html data-lf-module="example#0.0.0">
+<script type='text/javascript' src='lib/cajon/cajon.js'></script>
+<script src='requirejs.conf.js'></script>
 <body>
 <h1>test</h1>
 </body>
 
 
 <script>
+  require.config({
+    baseUrl: '.'
+  });
   require(['app'], function(){});
   require(['popup'], function(popupHTML) {
     var div = document.createElement('div');

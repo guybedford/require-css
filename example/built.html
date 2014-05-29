@@ -1,24 +1,13 @@
 <!doctype html>
-<html>
-<script type='text/javascript' src='../../../require.js'></script>
-<script>
-  require.config({
-    map: {
-      '*': {
-        'css': 'require-css/css'
-      } 
-    }
-  });
-</script>
-<script src='app/core-components.js'></script>
-
+<html data-lf-module="example#0.0.0">
+<script type='text/javascript' src='app-built.js'></script>
 <body>
 <h1>test</h1>
 </body>
 
 
 <script>
-  require(['app'], function(){});
+  require(['app']);
   require(['popup'], function(popupHTML) {
     var div = document.createElement('div');
     div.innerHTML = popupHTML;
