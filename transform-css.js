@@ -8,7 +8,6 @@ var transformedCss = exports = module.exports = function (req, toUrl, loadFile, 
     // TODO: move into parseModuleName
     var cssModule = parsed.cssId + '.css';
     var cssUrl = toUrl(cssModule);
-    var transformedCss;
     // Load file URL as string
     loadFile(cssUrl, function (cssStr) {
         var transformedCss = cssStr;
