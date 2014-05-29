@@ -3,13 +3,12 @@ var parseModuleName = require('./parse-module-path');
 /**
  * Get the transformed CSS from a given CSS file URL
  */
-var transformedCss = exports = module.exports = function (req, toUrl, loadFile, transformModuleNames, moduleName, callback) {
+var transformedCss = exports = module.exports = function (req, loadModule, transformModuleNames, moduleName, callback) {
     var parsed = parseModuleName(moduleName);
     // TODO: move into parseModuleName
     var cssModule = parsed.cssId + '.css';
-    var cssUrl = toUrl(cssModule);
     // Load file URL as string
-    loadFile(cssUrl, function (cssStr) {
+    loadModule(cssModule, function (cssStr) {
         var transformedCss = cssStr;
         req(transformModuleNames, function () {
             var transforms = [].slice.call(arguments);
@@ -34,7 +33,7 @@ exports.getTransformEaches = function getTransformEaches(config, key) {
     }
     var transforms = transformEaches.map(function (transformEach) {
       // It could just be a function to use for all platforms
-      if (typeof transformEach === 'function') {
+      if (typeof transformEach === 'function' || typeof transformEach === 'string') {
         return transformEach;
       }
       // or it could be an object with requirejs and node keys

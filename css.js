@@ -168,11 +168,16 @@ define(['./parse-module-path', './transform-css'], function(parseModulePath, get
     return normalize(name);
   }
 
+  // This is the last one included when excludeRequireCss is true
+  cssAPI.load = function(cssId, req, load) {
+    load();
+  };
+
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
 
   // load a file url and get the contents as a string
-  function loadFile(require, url, callback) {
-    var textModule = 'text!' + url;
+  function loadModule(require, module, callback) {
+    var textModule = 'text!' + module;
     require([textModule], function () {
       callback.apply(this, arguments);
     });
@@ -181,8 +186,7 @@ define(['./parse-module-path', './transform-css'], function(parseModulePath, get
   cssAPI.load = function(cssId, req, load, config) {
     getTransformedCss(
       req,
-      req.toUrl,
-      loadFile.bind({}, req),
+      loadModule.bind({}, req),
       getTransformedCss.getTransformEaches(config, 'requirejs'),
       cssId,
       withTransformedCss

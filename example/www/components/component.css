@@ -2,5 +2,5 @@
 @import 'test.css';
 
 body {
-  background-image: url(../test.jpg);
+  background-image: url("../test.jpg");
 }

@@ -142,8 +142,8 @@ function(req, normalize, parseModulePath, getTransformedCss) {
   };
 
   // Load a file path on disk
-  function loadFileAsync(path, callback) {
-    var str = loadFile(path);
+  function loadModuleAsync(toUrl, module, callback) {
+    var str = loadFile(toUrl(module));
     callback(str);
   }
 
@@ -169,8 +169,7 @@ function(req, normalize, parseModulePath, getTransformedCss) {
     console.log('transforming css for', name);
     getTransformedCss(
       nodeReq,
-      req.toUrl,
-      loadFileAsync,
+      loadModuleAsync.bind({}, req.toUrl),
       getTransformedCss.getTransformEaches(config, 'node'),
       name,
       function withTransformedCss(cssStr) {

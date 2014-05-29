@@ -479,13 +479,12 @@ define('css/transform-css',['require','exports','module','./parse-module-path'],
 /**
  * Get the transformed CSS from a given CSS file URL
  */
-var transformedCss = exports = module.exports = function (req, toUrl, loadFile, transformModuleNames, moduleName, callback) {
+var transformedCss = exports = module.exports = function (req, loadModule, transformModuleNames, moduleName, callback) {
     var parsed = parseModuleName(moduleName);
     // TODO: move into parseModuleName
     var cssModule = parsed.cssId + '.css';
-    var cssUrl = toUrl(cssModule);
     // Load file URL as string
-    loadFile(cssUrl, function (cssStr) {
+    loadModule(cssModule, function (cssStr) {
         var transformedCss = cssStr;
         req(transformModuleNames, function () {
             var transforms = [].slice.call(arguments);
@@ -569,9 +568,7 @@ define('css/css',['./parse-module-path', './transform-css'], function(parseModul
     return normalize(name);
   }
 
-  cssAPI.load = function(cssId, req, load) {
-    load();
-  };
+
 
   return cssAPI;
 });
@@ -599,4 +596,4 @@ define('popup',['css!popup'], function() {
 
 
 (function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})
-('/** @gobengo: I HAVE TRANSFORMED YOU **/\n\n/* module.css */\n\n/* used by app.js */\n\n@import \'www/test.css\';\n\n[data-lf-module=\"example#0.0.0\"] body {\n  font-family: sans-serif;\n}/** @gobengo: I HAVE TRANSFORMED YOU **/\n\n/* component.css */\n\n@import \'www/components/test.css\';\n\n.COMPONENT_PREFIX body {\n  background-image: url(www/test.jpg);\n}/** @gobengo: I HAVE TRANSFORMED YOU **/\n.popup {\n  width: 300px;\n  height: 300px;\n  padding: 20px;\n  background-color: green;\n  font-family: times;\n}\n');
+('/** @gobengo: I HAVE TRANSFORMED YOU **/\n\n/* module.css */\n\n/* used by app.js */\n\n@import \'www/test.css\';\n\n[data-lf-module=\"example#0.0.0\"] body {\n  font-family: sans-serif;\n}/** @gobengo: I HAVE TRANSFORMED YOU **/\n\n/* component.css */\n\n@import \'www/components/test.css\';\n\n.COMPONENT_PREFIX body {\n  background-image: url(\"www/test.jpg\");\n}/** @gobengo: I HAVE TRANSFORMED YOU **/\n.popup {\n  width: 300px;\n  height: 300px;\n  padding: 20px;\n  background-color: green;\n  font-family: times;\n}\n');
