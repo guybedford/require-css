@@ -30,7 +30,7 @@
  *
  */
 
-define(['./parse-module-path', './transform-css'], function(parseModulePath, getTransformedCss) {
+define(['./parse-module-path', './transform-css', 'text'], function(parseModulePath, getTransformedCss, text) {
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   if (typeof window == 'undefined')
     return { load: function(n, r, load){ load() } };
@@ -171,11 +171,8 @@ define(['./parse-module-path', './transform-css'], function(parseModulePath, get
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
 
   // load a file url and get the contents as a string
-  function loadFile(require, url, callback) {
-    var textModule = 'text!' + url;
-    require([textModule], function () {
-      callback.apply(this, arguments);
-    });
+  function loadFile(require, module, callback) {
+    text.get(module, callback);
   }
 
   cssAPI.load = function(cssId, req, load, config) {
