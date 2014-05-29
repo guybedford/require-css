@@ -107,40 +107,6 @@ function(req, normalize, parseModulePath, getTransformedCss) {
   var layerBuffer = [];
   var cssBuffer = {};
 
-  /**
-   * Transform the CSS based on config.css.transformEach
-   */
-  function transform(transforms, css, params, config) {
-    // The developer can add some transformFunctions to transform the css once read
-    if (! (transforms instanceof Array)) {
-      transforms = [transforms];
-    }
-
-    var nodeTransforms = transforms.map(function (t) {
-      return t.node;
-    });
-    nodeTransforms.forEach(function (transform) {
-      switch (typeof transform) {
-        case 'function':
-          css = transform(css, params);
-          break;
-        case 'string':
-          // must be a moduleId for module that exports function
-          var module = require.nodeRequire(require.toUrl(transform));
-          css = module(css, params, config);
-          break;
-      }
-    });
-    return css;
-  }
-  // Use configured fns to transform each required
-  // css! module
-  var transformEach = function (css, params, config) {
-    var cssConfig = config.css || {};
-    var transformEachFns = cssConfig.transformEach || [];
-    return transform(transformEachFns, css, params, config);
-  };
-
   // Load a file path on disk
   function loadModuleAsync(toUrl, module, callback) {
     var str = loadFile(toUrl(module));
