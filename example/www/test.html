@@ -1,12 +1,37 @@
 <!doctype html>
 <html>
-<script type='text/javascript' src='../../../require.js'></script>
+<script type='text/javascript' src='lib/cajon/cajon.js'></script>
 <script>
   require.config({
+    baseUrl: '.',
+    paths: {
+      rework: 'lib/rework/rework',
+      'json': 'lib/requirejs-plugins/src/json'
+    },
     map: {
       '*': {
         'css': 'require-css/css'
       } 
+    },
+    // packages: [{
+    //   name: 'css',
+    //   location: 'require-css'
+    // }],
+    css: {
+      transformEach: [{
+        // can run async
+        requirejs: 'tools/transform-css',
+        // node module must run synchronously
+        node: 'TODO'
+      },{
+        requirejs: 'tools/prefix-css-requirejs',
+        node: 'tools/prefix-css-node'
+      }]
+    },
+    shim: {
+      rework: {
+        exports: 'rework'
+      }
     }
   });
 </script>
