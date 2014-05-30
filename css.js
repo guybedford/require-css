@@ -184,10 +184,14 @@ define(['./parse-module-path', './transform-css'], function(parseModulePath, get
   }
 
   cssAPI.load = function(cssId, req, load, config) {
+    var shouldTransform = (config.css || {}).transform !== false;
+    var cssConfig = config.css || {};
+    var transformEaches = shouldTransform ?
+      getTransformedCss.getTransformEaches(config, 'requirejs') : [];
     getTransformedCss(
       req,
       loadModule.bind({}, req),
-      getTransformedCss.getTransformEaches(config, 'requirejs'),
+      transformEaches,
       cssId,
       withTransformedCss
       );
