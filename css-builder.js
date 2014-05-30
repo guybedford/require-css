@@ -213,6 +213,8 @@ function(req, normalize, parseModulePath, getTransformedCss) {
         toWrite = existingCss +'\n' + toWrite;
         console.log('RequireCSS: Warning, separateCSS module path "' + outPath + '" already exists and is being appended to by the layer CSS.');
         saveFile(outPath, toWrite);  
+      } else {
+        saveFile(outPath, toWrite);
       }
       
     }
