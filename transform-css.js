@@ -8,15 +8,20 @@ var transformedCss = exports = module.exports = function (req, loadModule, trans
     // TODO: move into parseModuleName
     var cssModule = parsed.cssId + '.css';
     // Load file URL as string
+    console.log('getting transformed css for ', cssModule);
     loadModule(cssModule, function (cssStr) {
-        var transformedCss = cssStr;
-        req(transformModuleNames, function () {
-            var transforms = [].slice.call(arguments);
-            transforms.forEach(function (transform) {
-                transformedCss = transform(transformedCss, parsed.params);
-            });
-            callback(transformedCss);
+        exports.fromCssStr(req, transformModuleNames, parsed.params, cssStr, callback);
+    });
+};
+
+exports.fromCssStr = function (req, transformModuleNames, params, cssStr, callback) {
+    var transformedCss = cssStr;
+    req(transformModuleNames, function () {
+        var transforms = [].slice.call(arguments);
+        transforms.forEach(function (transform) {
+            transformedCss = transform(transformedCss, params);
         });
+        callback(transformedCss);
     });
 };
 

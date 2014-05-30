@@ -1,7 +1,7 @@
 define(['require', './normalize', './parse-module-path', './transform-css'],
 function(req, normalize, parseModulePath, getTransformedCss) {
   var cssAPI = {};
-  
+
   var isWindows = !!process.platform.match(/^win/);
 
   function compress(css) {
@@ -105,6 +105,19 @@ function(req, normalize, parseModulePath, getTransformedCss) {
   var config;
 
   var layerBuffer = [];
+
+  cssAPI.addToBuffer = function (str) {
+    layerBuffer.push(str);
+  };
+
+  cssAPI.clearBuffer = function () {
+    layerBuffer.length = 0;
+  };
+
+  cssAPI.getBuffer = function () {
+    return layerBuffer;
+  };
+
   var cssBuffer = {};
 
   // Load a file path on disk
@@ -113,9 +126,18 @@ function(req, normalize, parseModulePath, getTransformedCss) {
     callback(str);
   }
 
+  var didClearFile = false;
   cssAPI.load = function(name, req, load, _config) {
     //store config
     config = config || _config;
+    var cssConfig = config.css || {};
+
+    // The config.css.clearFileEachBuild option, if present
+    // indicates a file that should be emptied on each new build
+    // Otherwise the file will always be appended to
+    if (cssConfig.clearFileEachBuild && ! didClearFile) {
+      saveFile(cssConfig.clearFileEachBuild, '');
+    }
 
     if (!siteRoot) {
       siteRoot = path.resolve(config.dir || path.dirname(config.out), config.siteRoot || '.') + '/';
@@ -158,19 +180,26 @@ function(req, normalize, parseModulePath, getTransformedCss) {
     if (moduleName.match(absUrlRegEx))
       return;
 
-    layerBuffer.push(cssBuffer[moduleName]);
+    cssAPI.addToBuffer(cssBuffer[moduleName]);
     
     if (config.buildCSS != false)
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
   }
   
   cssAPI.onLayerEnd = function(write, data) {
+    this.flushBuffer(config, write, data);
+  }
+
+  cssAPI.flushBuffer = function(config, write, data) {
+    var layerBuffer = cssAPI.getBuffer();
+
     if (config.separateCSS && config.IESelectorLimit)
       throw 'RequireCSS: separateCSS option is not compatible with ensuring the IE selector limit';
 
     if (config.separateCSS) {
       console.log('Writing CSS! file: ' + data.name + '\n');
       var outPath;
+
       if (config.dir) {
         outPath = path.resolve(config.dir, config.baseUrl, data.name + '.css');
       } else {
@@ -178,16 +207,16 @@ function(req, normalize, parseModulePath, getTransformedCss) {
       }
 
       var css = layerBuffer.join('');
-
-      if (fs.existsSync(outPath))
-        console.log('RequireCSS: Warning, separateCSS module path "' + outPath + '" already exists and is being replaced by the layer CSS.');
-
-      process.nextTick(function() {
-        saveFile(outPath, compress(css));  
-      });
+      var toWrite = compress(css);
+      if (fs.existsSync(outPath)) {
+        var existingCss = loadFile(outPath);
+        toWrite = existingCss +'\n' + toWrite;
+        console.log('RequireCSS: Warning, separateCSS module path "' + outPath + '" already exists and is being appended to by the layer CSS.');
+        saveFile(outPath, toWrite);  
+      }
       
     }
-    else if (config.buildCSS != false) {
+    if (config.buildCSS != false) {
       var styles = config.IESelectorLimit ? layerBuffer : [layerBuffer.join('')];
       for (var i = 0; i < styles.length; i++) {
         if (styles[i] == '')
@@ -200,7 +229,7 @@ function(req, normalize, parseModulePath, getTransformedCss) {
       }
     }    
     //clear layer buffer for next layer
-    layerBuffer = [];
+    cssAPI.clearBuffer();
   }
   
   return cssAPI;
