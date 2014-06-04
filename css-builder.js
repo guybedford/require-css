@@ -135,7 +135,7 @@ function(req, normalize, parseModulePath, getTransformedCss) {
     // The config.css.clearFileEachBuild option, if present
     // indicates a file that should be emptied on each new build
     // Otherwise the file will always be appended to
-    if (cssConfig.clearFileEachBuild && ! didClearFile) {
+    if (cssConfig.clearFileEachBuild && ! didClearFile && fs.existsSync(cssConfig.clearFileEachBuild)) {
       saveFile(cssConfig.clearFileEachBuild, '');
     }
 
