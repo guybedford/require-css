@@ -1,4 +1,5 @@
 {
+  "name": "require-css",
   "volo": {
     "type": "directory"
   }
