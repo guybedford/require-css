@@ -126,7 +126,7 @@ define(['require', './normalize'], function(req, normalize) {
       fileUrl = fileUrl.replace(/\\/g, '/');
 
     // rebase to the output directory if based on the source directory;
-    // baseUrl points always to the ouptut directory, fileUrl only if
+    // baseUrl points always to the output directory, fileUrl only if
     // it is not prefixed by a computed path (relative too)
     var fileSiteUrl = fileUrl;
     if (fileSiteUrl.indexOf(baseUrl) < 0) {
