@@ -117,7 +117,7 @@ define(function() {
     fromBase = removeDoubleSlashes(fromBase);
     toBase = removeDoubleSlashes(toBase);
 
-    var urlRegEx = /@import\s*("([^"]*)"|'([^']*)')|url\s*\(\s*(\s*"([^"]*)"|'([^']*)'|[^\)]*\s*)\s*\)/ig;
+    var urlRegEx = /@import\s*("([^"]*)"|'([^']*)')|url\s*\((?!#)\s*(\s*"([^"]*)"|'([^']*)'|[^\)]*\s*)\s*\)/ig;
     var result, url, source;
 
     while (result = urlRegEx.exec(source)) {
