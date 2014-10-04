@@ -159,8 +159,17 @@ define(['require', './normalize'], function(req, normalize) {
 
     layerBuffer.push(cssBuffer[moduleName]);
 
-    if (config.buildCSS != false)
-    write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
+    if (config.buildCSS != false) {
+      var style = cssBuffer[moduleName];
+      var moduleChunks = '';
+
+      if (config.writeCSSModule && style) {
+        moduleChunks = "function writeCss(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));}\n";
+        moduleChunks += 'writeCss("' + escape(compress(style)) + '");';
+      }
+
+      write.asModule(pluginName + '!' + moduleName, 'define(function(){\n'+ moduleChunks +'\n})');
+    }
   }
 
   cssAPI.onLayerEnd = function(write, data) {
@@ -181,7 +190,7 @@ define(['require', './normalize'], function(req, normalize) {
       });
 
     }
-    else if (config.buildCSS != false) {
+    else if (config.buildCSS != false && config.writeCSSModule != true) {
       var styles = config.IESelectorLimit ? layerBuffer : [layerBuffer.join('')];
       for (var i = 0; i < styles.length; i++) {
         if (styles[i] == '')
