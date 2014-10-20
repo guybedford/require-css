@@ -65,7 +65,7 @@ define(['require', './normalize'], function(req, normalize) {
   function saveFile(path, data) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       var fs = require.nodeRequire('fs');
-      fs.appendFileSync(path, data, 'utf8');
+      fs.writeFileSync(path, data, 'utf8');
     }
     else {
       var content = new java.lang.String(data);
@@ -173,10 +173,10 @@ define(['require', './normalize'], function(req, normalize) {
 
       var css = layerBuffer.join('');
 
-      if (fs.existsSync(outPath))
-        console.log('RequireCSS: Warning, separateCSS module path "' + outPath + '" already exists and is being replaced by the layer CSS.');
-
       process.nextTick(function() {
+        if (fs.existsSync(outPath)) {
+          css = css + fs.readFileSync(outPath, {encoding: 'utf8'});
+        }
         saveFile(outPath, compress(css));
       });
 
