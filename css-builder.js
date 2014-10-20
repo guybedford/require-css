@@ -65,7 +65,7 @@ define(['require', './normalize'], function(req, normalize) {
   function saveFile(path, data) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       var fs = require.nodeRequire('fs');
-      fs.writeFileSync(path, data, 'utf8');
+      fs.appendFileSync(path, data, 'utf8');
     }
     else {
       var content = new java.lang.String(data);
