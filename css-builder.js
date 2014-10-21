@@ -173,10 +173,10 @@ define(['require', './normalize'], function(req, normalize) {
 
       var css = layerBuffer.join('');
 
-      if (fs.existsSync(outPath))
-        console.log('RequireCSS: Warning, separateCSS module path "' + outPath + '" already exists and is being replaced by the layer CSS.');
-
       process.nextTick(function() {
+        if (fs.existsSync(outPath)) {
+          css = css + fs.readFileSync(outPath, {encoding: 'utf8'});
+        }
         saveFile(outPath, compress(css));
       });
 
