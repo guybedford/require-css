@@ -7,6 +7,7 @@ define(['require', './normalize'], function(req, normalize) {
     if (config.optimizeCss == 'none') {
       return css;
     }
+    
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       try {
         var csso = require.nodeRequire('csso');
@@ -111,6 +112,15 @@ define(['require', './normalize'], function(req, normalize) {
 
   cssAPI.load = function(name, req, load, _config) {
 
+    if (!GLOBAL._requirejsCssData) {
+      GLOBAL._requirejsCssData = {
+        usedBy: {css: true}, 
+        css: ''
+      }
+    } else {
+      GLOBAL._requirejsCssData.usedBy.css = true;
+    }
+    
     //store config
     config = config || _config;
 
@@ -174,9 +184,14 @@ define(['require', './normalize'], function(req, normalize) {
       var css = layerBuffer.join('');
 
       process.nextTick(function() {
-        if (fs.existsSync(outPath)) {
-          css = css + fs.readFileSync(outPath, {encoding: 'utf8'});
+        if (GLOBAL._requirejsCssData) {
+          css = GLOBAL._requirejsCssData.css = css + GLOBAL._requirejsCssData.css;
+          delete GLOBAL._requirejsCssData.usedBy.css;
+          if (Object.keys(GLOBAL._requirejsCssData.usedBy).length === 0) {
+            delete GLOBAL._requirejsCssData;
+          }
         }
+        
         saveFile(outPath, compress(css));
       });
 
