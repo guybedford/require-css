@@ -95,7 +95,9 @@ define(['require', './normalize'], function(req, normalize) {
   // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
   var absUrlRegEx = /^([^\:\/]+:\/)?\//;
-
+  
+  // Write Css module definition
+  var writeCSSDefinition = "define('@writecss', function writeCss(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));}});\n";
 
   var siteRoot;
 
@@ -164,11 +166,18 @@ define(['require', './normalize'], function(req, normalize) {
       var moduleChunks = '';
 
       if (config.writeCSSModule && style) {
-        moduleChunks = "function writeCss(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));}\n";
-        moduleChunks += 'writeCss("' + escape(compress(style)) + '");';
-      }
+        moduleChunks += escape(compress(style));
 
-      write.asModule(pluginName + '!' + moduleName, 'define(function(){\n'+ moduleChunks +'\n})');
+ 	    if (writeCSSDefinition) {
+          write(writeCSSDefinition);
+    	  writeCSSDefinition = '';
+        }
+
+	    write.asModule(pluginName + '!' + moduleName, 'define(["@writecss"], function(writeCss){\n writeCss("'+ moduleChunks +'");\n})');
+      }
+      else {
+		write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
+      }
     }
   }
 
