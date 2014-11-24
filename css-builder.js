@@ -97,7 +97,7 @@ define(['require', './normalize'], function(req, normalize) {
   var absUrlRegEx = /^([^\:\/]+:\/)?\//;
   
   // Write Css module definition
-  var writeCSSDefinition = "define('@writecss', function writeCss(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));});\n";
+  var writeCSSDefinition = "define('@writecss', function() {return function writeCss(c) {var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));};});";
 
   var siteRoot;
 
