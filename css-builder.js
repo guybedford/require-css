@@ -156,6 +156,8 @@ define(['require', './normalize'], function(req, normalize) {
   }
 
   cssAPI.write = function(pluginName, moduleName, write, parse) {
+    var cssModule;
+    
     //external URLS don't get added (just like JS requires)
     if (moduleName.match(absUrlRegEx))
       return;
@@ -171,11 +173,13 @@ define(['require', './normalize'], function(req, normalize) {
           write(writeCSSDefinition);
         }
 
-	    write.asModule(pluginName + '!' + moduleName, 'define(["@writecss"], function(writeCss){\n writeCss("'+ escape(compress(style)) +'");\n})');
+        cssModule = 'define(["@writecss"], function(writeCss){\n writeCss("'+ escape(compress(style)) +'");\n})';
       }
       else {
-		write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
+		cssModule = 'define(function(){})';
       }
+
+      write.asModule(pluginName + '!' + moduleName, cssModule);
     }
   }
 
