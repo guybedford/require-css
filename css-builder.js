@@ -108,6 +108,7 @@ define(['require', './normalize'], function(req, normalize) {
   var curModule = 0;
   var config;
 
+  var writeCSSForLayer = true;
   var layerBuffer = [];
   var cssBuffer = {};
 
@@ -163,17 +164,14 @@ define(['require', './normalize'], function(req, normalize) {
 
     if (config.buildCSS != false) {
       var style = cssBuffer[moduleName];
-      var moduleChunks = '';
 
       if (config.writeCSSModule && style) {
-        moduleChunks += escape(compress(style));
-
- 	    if (writeCSSDefinition) {
+ 	    if (writeCSSForLayer) {
+    	  writeCSSForLayer = false;
           write(writeCSSDefinition);
-    	  writeCSSDefinition = '';
         }
 
-	    write.asModule(pluginName + '!' + moduleName, 'define(["@writecss"], function(writeCss){\n writeCss("'+ moduleChunks +'");\n})');
+	    write.asModule(pluginName + '!' + moduleName, 'define(["@writecss"], function(writeCss){\n writeCss("'+ escape(compress(style)) +'");\n})');
       }
       else {
 		write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
@@ -212,6 +210,7 @@ define(['require', './normalize'], function(req, normalize) {
     }
     //clear layer buffer for next layer
     layerBuffer = [];
+    writeCSSForLayer = true;
   }
 
   return cssAPI;
