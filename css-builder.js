@@ -96,7 +96,9 @@ define(['require', './normalize'], function(req, normalize) {
   // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
   var absUrlRegEx = /^([^\:\/]+:\/)?\//;
-
+  
+  // Write Css module definition
+  var writeCSSDefinition = "define('@writecss', function() {return function writeCss(c) {var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));};});";
 
   var siteRoot;
 
@@ -107,6 +109,7 @@ define(['require', './normalize'], function(req, normalize) {
   var curModule = 0;
   var config;
 
+  var writeCSSForLayer = true;
   var layerBuffer = [];
   var cssBuffer = {};
 
@@ -153,6 +156,8 @@ define(['require', './normalize'], function(req, normalize) {
   }
 
   cssAPI.write = function(pluginName, moduleName, write, parse) {
+    var cssModule;
+    
     //external URLS don't get added (just like JS requires)
     if (moduleName.match(absUrlRegEx))
       return;
@@ -168,8 +173,23 @@ define(['require', './normalize'], function(req, normalize) {
       global._requirejsCssData.usedBy.css = true;
     }
 
-    if (config.buildCSS != false)
-    write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
+    if (config.buildCSS != false) {
+      var style = cssBuffer[moduleName];
+
+      if (config.writeCSSModule && style) {
+ 	    if (writeCSSForLayer) {
+    	  writeCSSForLayer = false;
+          write(writeCSSDefinition);
+        }
+
+        cssModule = 'define(["@writecss"], function(writeCss){\n writeCss("'+ escape(compress(style)) +'");\n})';
+      }
+      else {
+		cssModule = 'define(function(){})';
+      }
+
+      write.asModule(pluginName + '!' + moduleName, cssModule);
+    }
   }
 
   cssAPI.onLayerEnd = function(write, data) {
@@ -195,7 +215,7 @@ define(['require', './normalize'], function(req, normalize) {
       });
 
     }
-    else if (config.buildCSS != false) {
+    else if (config.buildCSS != false && config.writeCSSModule != true) {
       var styles = config.IESelectorLimit ? layerBuffer : [layerBuffer.join('')];
       for (var i = 0; i < styles.length; i++) {
         if (styles[i] == '')
@@ -208,6 +228,7 @@ define(['require', './normalize'], function(req, normalize) {
     }
     //clear layer buffer for next layer
     layerBuffer = [];
+    writeCSSForLayer = true;
   }
 
   return cssAPI;
