@@ -7,6 +7,7 @@ define(['require', './normalize'], function(req, normalize) {
     if (config.optimizeCss == 'none') {
       return css;
     }
+    
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       try {
         var csso = require.nodeRequire('csso');
@@ -110,7 +111,6 @@ define(['require', './normalize'], function(req, normalize) {
   var cssBuffer = {};
 
   cssAPI.load = function(name, req, load, _config) {
-
     //store config
     config = config || _config;
 
@@ -158,6 +158,15 @@ define(['require', './normalize'], function(req, normalize) {
       return;
 
     layerBuffer.push(cssBuffer[moduleName]);
+    
+    if (!global._requirejsCssData) {
+      global._requirejsCssData = {
+        usedBy: {css: true},
+        css: ''
+      }
+    } else {
+      global._requirejsCssData.usedBy.css = true;
+    }
 
     if (config.buildCSS != false)
     write.asModule(pluginName + '!' + moduleName, 'define(function(){})');
@@ -174,9 +183,14 @@ define(['require', './normalize'], function(req, normalize) {
       var css = layerBuffer.join('');
 
       process.nextTick(function() {
-        if (fs.existsSync(outPath)) {
-          css = css + fs.readFileSync(outPath, {encoding: 'utf8'});
+        if (global._requirejsCssData) {
+          css = global._requirejsCssData.css = css + global._requirejsCssData.css;
+          delete global._requirejsCssData.usedBy.css;
+          if (Object.keys(global._requirejsCssData.usedBy).length === 0) {
+            delete global._requirejsCssData;
+          }
         }
+        
         saveFile(outPath, compress(css));
       });
 
