@@ -1,8 +1,6 @@
 require-css
 ===========
 
-*New maintainers welcome*
-
 RequireJS CSS requiring and optimization, with almond support.
 
 Useful for writing modular CSS dependencies alongside scripts. For an example of widget rendering see [ZestJS](http://zestjs.org).
