@@ -218,7 +218,7 @@ CSS requires will then be left in the source "as is". This shouldn't be used wit
 
 ### Disabling CSS Optimization
 
-To disable CSS optimization (but perhaps still concatenate the CSS), use the optimize option.
+To disable CSS optimization of the built CSS, use the `optimize` option:
 
 ```javascript
 {
