@@ -218,15 +218,11 @@ CSS requires will then be left in the source "as is". This shouldn't be used wit
 
 ### Disabling CSS Optimization
 
-To disable CSS optimization of the built CSS, use the `optimize` option:
+To disable CSS optimization of the built CSS, use the `optimizeRequireCSS` option:
 
 ```javascript
 {
-  config: {
-    'css': {
-      optimize: false
-    }
-  },
+  optimizeRequireCSS: false,
   modules: [
   {
     name: 'mymodule'

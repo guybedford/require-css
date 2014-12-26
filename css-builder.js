@@ -4,7 +4,7 @@ define(['require', './normalize'], function(req, normalize) {
   var isWindows = !!process.platform.match(/^win/);
 
   function compress(css) {
-    if (cssConfig.optimize===false) {
+    if (config.optimizeRequireCSS===false) {
       return css;
     }
     
@@ -108,7 +108,6 @@ define(['require', './normalize'], function(req, normalize) {
 
   var curModule = 0;
   var config;
-  var cssConfig;
 
   var writeCSSForLayer = true;
   var layerBuffer = [];
@@ -117,7 +116,6 @@ define(['require', './normalize'], function(req, normalize) {
   cssAPI.load = function(name, req, load, _config) {
     //store config
     config = config || _config;
-    cssConfig = (config.config && config.config.css) ? config.config.css : {};
 
     if (!siteRoot) {
       siteRoot = path.resolve(config.dir || path.dirname(config.out), config.siteRoot || '.') + '/';
