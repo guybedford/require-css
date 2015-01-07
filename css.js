@@ -1,7 +1,7 @@
 /*
  * Require-CSS RequireJS css! loader plugin
- * 0.1.2
- * Guy Bedford 2013
+ * 0.1.8
+ * Guy Bedford 2014
  * MIT
  */
 
