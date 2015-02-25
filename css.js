@@ -74,13 +74,14 @@ define(function() {
   var ieCurCallback;
   
   var createIeLoad = function(url) {
+    curSheet.addImport(url);
+    curStyle.onload = function(){ processIeLoad() };
+    
     ieCnt++;
-    if (ieCnt == 32) {
+    if (ieCnt == 31) {
       createStyle();
       ieCnt = 0;
     }
-    curSheet.addImport(url);
-    curStyle.onload = function(){ processIeLoad() };
   }
   var processIeLoad = function() {
     ieCurCallback();
