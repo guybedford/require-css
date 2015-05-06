@@ -74,7 +74,7 @@ define(function() {
   var ieCurCallback;
   
   var createIeLoad = function(url) {
-    curSheet.addImport(url);
+    curSheet.addImport(url + "?" + Math.random());
     curStyle.onload = function(){ processIeLoad() };
     
     ieCnt++;
