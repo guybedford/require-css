@@ -37,7 +37,7 @@ define(function() {
 
   var head = document.getElementsByTagName('head')[0];
 
-  var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit\/([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)|MSIE\s([^ ;]*)|AndroidWebKit\/([^ ;]*)/) || 0;
+  var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit[\/|5]([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)|MSIE\s([^ ;]*)|AndroidWebKit\/([^ ;]*)/) || 0;
 
   // use <style> @import load method (IE < 9, Firefox < 18)
   var useImportLoad = false;
