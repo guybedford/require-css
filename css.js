@@ -157,7 +157,7 @@ define(function() {
 //>>excludeEnd('excludeRequireCss')
   cssAPI.normalize = function(name, normalize) {
     // Only append .css if it doesn't have it already or a ?
-    return normalize( /(\?|.css$)/.test(name) ? name : name+'.css' );
+    return normalize( /(\?|\.css$)/.test(name) ? name : name+'.css' );
   }
 
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
