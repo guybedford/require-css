@@ -146,21 +146,23 @@ define(function() {
         }
       }, 10);
     link.href = url;
+    // Support for requireJS error handling on links. Tested Chrome v44 & Firefox v40
+    link.onerror=function(error){
+      this.remove();
+      callback.error(error);
+    }
     head.appendChild(link);
   }
 
 //>>excludeEnd('excludeRequireCss')
   cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 4, 4) == '.css')
-      name = name.substr(0, name.length - 4);
-
-    return normalize(name);
+    // Only append .css if it doesn't have it already or a ?
+    return normalize( /(\?|.css$)/.test(name) ? name : name+'.css' );
   }
 
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   cssAPI.load = function(cssId, req, load, config) {
-
-    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
+    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId), load);
 
   }
 
