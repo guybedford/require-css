@@ -108,6 +108,7 @@ define(['require', './normalize'], function(req, normalize) {
 
   var curModule = 0;
   var config;
+  var filesToRemove = [];
 
   var writeCSSForLayer = true;
   var layerBuffer = [];
@@ -145,6 +146,10 @@ define(['require', './normalize'], function(req, normalize) {
 
     //add to the buffer
     cssBuffer[name] = normalize(loadFile(fileUrl), fileSiteUrl, siteRoot);
+
+    if (config.removeCombined && config.isBuild && config.buildCSS != false) {
+      filesToRemove.push(fileUrl);
+    }
 
     load();
   }
@@ -229,6 +234,16 @@ define(['require', './normalize'], function(req, normalize) {
     //clear layer buffer for next layer
     layerBuffer = [];
     writeCSSForLayer = true;
+    
+    
+    if (config.removeCombined && filesToRemove.length) {
+      var fs = require.nodeRequire('fs');
+      filesToRemove.forEach(function (path) {
+        if (fs.existsSync(path)) {
+          fs.unlinkSync(path);
+        }
+      });
+    }
   }
 
   return cssAPI;
