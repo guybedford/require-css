@@ -36,6 +36,8 @@ define(function() {
     return { load: function(n, r, load){ load() } };
 
   var head = document.getElementsByTagName('head')[0];
+  
+  var crossorigin;
 
   var engine = window.navigator.userAgent.match(/Trident\/([^ ;]*)|AppleWebKit\/([^ ;]*)|Opera\/([^ ;]*)|rv\:([^ ;]*)(.*?)Gecko\/([^ ;]*)|MSIE\s([^ ;]*)|AndroidWebKit\/([^ ;]*)/) || 0;
 
@@ -127,6 +129,9 @@ define(function() {
   // <link> load method
   var linkLoad = function(url, callback) {
     var link = document.createElement('link');
+     if(crossorigin){
+    link.setAttribute('crossorigin',crossorigin);
+  }
     link.type = 'text/css';
     link.rel = 'stylesheet';
     if (useOnload)
@@ -160,6 +165,7 @@ define(function() {
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   cssAPI.load = function(cssId, req, load, config) {
 
+   crossorigin = config.config.css ? config.config.css.crossorigin : crossorigin;
     (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
 
   }
