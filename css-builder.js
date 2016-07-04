@@ -1,26 +1,24 @@
 define(['require', './normalize'], function(req, normalize) {
   var cssAPI = {};
 
-  var isWindows = !!process.platform.match(/^win/);
+  var isWindows = typeof process !== "undefined" && !!process.platform.match(/^win/);
 
   function compress(css) {
     if (config.optimizeCss == 'none') {
       return css;
     }
-    
+
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       try {
         var csso = require.nodeRequire('csso');
-      }
-      catch(e) {
+      } catch (e) {
         console.log('Compression module not installed. Use "npm install csso -g" to enable.');
         return css;
       }
       var csslen = css.length;
       try {
-        css =  csso.justDoIt(css);
-      }
-      catch(e) {
+        css = csso.justDoIt(css);
+      } catch (e) {
         console.log('Compression failed due to a CSS syntax error.');
         return css;
       }
@@ -39,8 +37,7 @@ define(['require', './normalize'], function(req, normalize) {
       if (file.indexOf('\uFEFF') === 0)
         return file.substring(1);
       return file;
-    }
-    else {
+    } else {
       var file = new java.io.File(path),
         lineSeparator = java.lang.System.getProperty("line.separator"),
         input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), 'utf-8')),
@@ -52,11 +49,11 @@ define(['require', './normalize'], function(req, normalize) {
           line = line.substring(1);
         stringBuffer.append(line);
         while ((line = input.readLine()) !== null) {
-          stringBuffer.append(lineSeparator).append(line);
+          stringBuffer.append(lineSeparator)
+            .append(line);
         }
         return String(stringBuffer.toString());
-      }
-      finally {
+      } finally {
         input.close();
       }
     }
@@ -67,16 +64,14 @@ define(['require', './normalize'], function(req, normalize) {
     if (typeof process !== "undefined" && process.versions && !!process.versions.node && require.nodeRequire) {
       var fs = require.nodeRequire('fs');
       fs.writeFileSync(path, data, 'utf8');
-    }
-    else {
+    } else {
       var content = new java.lang.String(data);
       var output = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(path), 'utf-8'));
 
       try {
         output.write(content, 0, content.length());
         output.flush();
-      }
-      finally {
+      } finally {
         output.close();
       }
     }
@@ -96,13 +91,14 @@ define(['require', './normalize'], function(req, normalize) {
   // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
   var absUrlRegEx = /^([^\:\/]+:\/)?\//;
-  
+
   // Write Css module definition
   var writeCSSDefinition = "define('@writecss', function() {return function writeCss(c) {var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));};});";
 
   var siteRoot;
 
-  var baseParts = req.toUrl('base_url').split('/');
+  var baseParts = req.toUrl('base_url')
+    .split('/');
   baseParts[baseParts.length - 1] = '';
   var baseUrl = baseParts.join('/');
 
@@ -157,16 +153,18 @@ define(['require', './normalize'], function(req, normalize) {
 
   cssAPI.write = function(pluginName, moduleName, write, parse) {
     var cssModule;
-    
+
     //external URLS don't get added (just like JS requires)
     if (moduleName.match(absUrlRegEx))
       return;
 
     layerBuffer.push(cssBuffer[moduleName]);
-    
+
     if (!global._requirejsCssData) {
       global._requirejsCssData = {
-        usedBy: {css: true},
+        usedBy: {
+          css: true
+        },
         css: ''
       }
     } else {
@@ -177,15 +175,14 @@ define(['require', './normalize'], function(req, normalize) {
       var style = cssBuffer[moduleName];
 
       if (config.writeCSSModule && style) {
- 	    if (writeCSSForLayer) {
-    	  writeCSSForLayer = false;
+        if (writeCSSForLayer) {
+          writeCSSForLayer = false;
           write(writeCSSDefinition);
         }
 
-        cssModule = 'define(["@writecss"], function(writeCss){\n writeCss("'+ escape(compress(style)) +'");\n})';
-      }
-      else {
-		cssModule = 'define(function(){})';
+        cssModule = 'define(["@writecss"], function(writeCss){\n writeCss("' + escape(compress(style)) + '");\n})';
+      } else {
+        cssModule = 'define(function(){})';
       }
 
       write.asModule(pluginName + '!' + moduleName, cssModule);
@@ -206,23 +203,23 @@ define(['require', './normalize'], function(req, normalize) {
         if (global._requirejsCssData) {
           css = global._requirejsCssData.css = css + global._requirejsCssData.css;
           delete global._requirejsCssData.usedBy.css;
-          if (Object.keys(global._requirejsCssData.usedBy).length === 0) {
+          if (Object.keys(global._requirejsCssData.usedBy)
+            .length === 0) {
             delete global._requirejsCssData;
           }
         }
-        
+
         saveFile(outPath, compress(css));
       });
 
-    }
-    else if (config.buildCSS != false && config.writeCSSModule != true) {
+    } else if (config.buildCSS != false && config.writeCSSModule != true) {
       var styles = config.IESelectorLimit ? layerBuffer : [layerBuffer.join('')];
       for (var i = 0; i < styles.length; i++) {
         if (styles[i] == '')
           return;
         write(
-          "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n"
-          + "('" + escape(compress(styles[i])) + "');\n"
+          "(function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})\n" +
+          "('" + escape(compress(styles[i])) + "');\n"
         );
       }
     }
