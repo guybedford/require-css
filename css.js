@@ -68,27 +68,28 @@ define(function () {
 	// <style> @import load method
 	var curStyle;
 	var curSheet;
-	var createStyle = function () {
+	var createStyle = function (module) {
 		curStyle = document.createElement('style');
+		curStyle.setAttribute('data-requiremodule', module);
 		head.appendChild(curStyle);
 		curSheet = curStyle.styleSheet || curStyle.sheet;
 	};
 	var ieCnt = 0;
 	var ieLoads = [];
 	var ieCurCallback;
-	var createIeLoad = function (url) {
+	var createIeLoad = function (url, module) {
 		curSheet.addImport(url + '?' + Math.random());
 		curStyle.onload = function () {
-			processIeLoad();
+			processIeLoad(module);
 		};
 
 		ieCnt++;
 		if (ieCnt === 31) {
-			createStyle();
+			createStyle(module);
 			ieCnt = 0;
 		}
 	};
-	var processIeLoad = function () {
+	var processIeLoad = function (module) {
 		ieCurCallback();
 
 		var nextLoad = ieLoads.shift();
@@ -99,11 +100,11 @@ define(function () {
 		}
 
 		ieCurCallback = nextLoad[1];
-		createIeLoad(nextLoad[0]);
+		createIeLoad(nextLoad[0], module);
 	};
-	var importLoad = function (url, callback) {
+	var importLoad = function (url, module, callback) {
 		if (!curSheet || !curSheet.addImport) {
-			createStyle();
+			createStyle(module);
 		}
 
 		if (curSheet && curSheet.addImport) {
@@ -111,7 +112,7 @@ define(function () {
 			if (ieCurCallback) {
 				ieLoads.push([url, callback]);
 			} else {
-				createIeLoad(url);
+				createIeLoad(url, module);
 				ieCurCallback = callback;
 			}
 		} else {
@@ -129,8 +130,9 @@ define(function () {
 	};
 
 	// <link> load method
-	var linkLoad = function (url, callback) {
+	var linkLoad = function (url, module, callback) {
 		var link = document.createElement('link');
+		link.setAttribute('data-requiremodule', module);
 		link.type = 'text/css';
 		link.rel = 'stylesheet';
 		if (useOnload) {
@@ -161,8 +163,8 @@ define(function () {
 		return normalize(name);
 	};
 
-	cssAPI.load = function (cssId, req, load, config) {
-		(useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
+	cssAPI.load = function (cssId, req, load) {
+		(useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), cssId, load);
 	};
 
 	return cssAPI;
