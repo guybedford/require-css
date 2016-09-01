@@ -143,8 +143,6 @@ define(function() {
           var sheet = document.styleSheets[i];
           if (sheet.href == link.href) {
             clearInterval(loadInterval);
-            console.log('callback!');
-            console.log(callback);
             return callback();
           }
         }
