@@ -127,26 +127,29 @@ define(function() {
   // <link> load method
   var linkLoad = function(url, callback) {
     var link = document.createElement('link');
+    link.href = url;
     link.type = 'text/css';
     link.rel = 'stylesheet';
-    if (useOnload)
-      link.onload = function() {
-        link.onload = function() {};
-        // for style dimensions queries, a short delay can still be necessary
-        setTimeout(callback, 7);
-      }
-    else
-      var loadInterval = setInterval(function() {
+    head.appendChild(link);
+
+    var loadInterval = setInterval(function () {
+      if (useOnload) {
+        link.onload = function () {
+          link.onload = function () { };
+          callback();
+        }
+      } else {
         for (var i = 0; i < document.styleSheets.length; i++) {
           var sheet = document.styleSheets[i];
           if (sheet.href == link.href) {
             clearInterval(loadInterval);
+            console.log('callback!');
+            console.log(callback);
             return callback();
           }
         }
-      }, 10);
-    link.href = url;
-    head.appendChild(link);
+      }
+    }, 6)
   }
 
 //>>excludeEnd('excludeRequireCss')
