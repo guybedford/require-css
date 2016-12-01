@@ -14,7 +14,7 @@
  * Android
  * iOS 6
  * IE 6 - 10
- * Chome 3 - 26
+ * Chrome 3 - 26
  * Firefox 3.5 - 19
  * Opera 10 - 12
  * 
