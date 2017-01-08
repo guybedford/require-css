@@ -67,6 +67,18 @@ Then the page can be displayed while the layer is still loading asynchronously i
 In this case, the CSS that goes with a template being dynamically rendered is loaded with that same script asynchronously. 
 No longer does it need to sit in a `<link>` tag that blocks the page display unnecessarily.
 
+If you'd like to force links to be added instead of injecting directly into style tags, put the following option in your requirejs configuration:
+
+```javascript
+requirejs.config({
+  //...
+  css: {
+    useLinks: true
+  }
+});
+
+```
+
 Modular CSS
 -----------
 
