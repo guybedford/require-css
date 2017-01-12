@@ -49,7 +49,7 @@ define(function() {
   if (engine[1] || engine[7])
     useImportLoad = parseInt(engine[1]) < 6 || parseInt(engine[7]) <= 9;
   // webkit
-  else if (engine[2] || engine[8])
+  else if (engine[2] || engine[8] || 'WebkitAppearance' in document.documentElement.style)
     useOnload = false;
   // gecko
   else if (engine[4])
