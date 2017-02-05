@@ -47,6 +47,11 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     normalize.convertURIBase('some/file', 'http://some.cdn.com/baseUrl/', 'baseUrl/'),
     'http://some.cdn.com/baseUrl/some/file'
   );
+  assert(
+    'Converting with backtrack in fromBase',
+    normalize.convertURIBase('url(../test)', '/one/two/../three', '/one/four'),
+    'url(../test)'
+  );
   console.log('\nTesting Stylesheet Regular Expressions');
   assert(
     '@import statements',
