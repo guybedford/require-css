@@ -18,7 +18,16 @@ define(['require', './normalize'], function(req, normalize) {
       }
       var csslen = css.length;
       try {
-        css =  csso.justDoIt(css);
+        if (typeof csso.minify === 'function') {
+            var minifyResult = csso.minify(css);
+            if (typeof minifyResult === 'string'){ // for csso < 2.0.0
+              css = minifyResult; 
+            } else if (typeof minifyResult === 'object'){ // for csso >= 2.0.0
+              css = minifyResult.css; 
+            } 
+        } else { // justDoIt() was always. minify() appeared in csso 1.4.0.
+          css = csso.justDoIt(css);
+        }
       }
       catch(e) {
         console.log('Compression failed due to a CSS syntax error.');
