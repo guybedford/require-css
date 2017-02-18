@@ -3,5 +3,8 @@
   "version": "0.1.9",
   "volo": {
     "type": "directory"
+  },
+  "scripts": {
+    "test": "node test/test.js"
   }
 }
