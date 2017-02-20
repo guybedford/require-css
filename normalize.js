@@ -43,10 +43,25 @@ define(function() {
   // given a relative URI, and two absolute base URIs, convert it from one base to another
   var protocolRegEx = /[^\:\/]*:\/\/([^\/])*/;
   var absUrlRegEx = /^(\/|data:)/;
+
+  // given a URI, remove '..' if possible
+  function normalizeURI(uri) {
+      return removeDoubleSlashes(uri).split('/').reduce(function(prev, curr, idx) {
+          if (prev.length === 0 || curr !== '..') {
+              prev.push(curr);
+          } else {
+              prev.pop();
+          }
+          return prev;
+      }, []).join('/');
+  }
+
   function convertURIBase(uri, fromBase, toBase) {
+    fromBase = normalizeURI(fromBase);
+    toBase = normalizeURI(toBase);
     if (uri.match(absUrlRegEx) || uri.match(protocolRegEx))
       return uri;
-    uri = removeDoubleSlashes(uri);
+    uri = normalizeURI(uri);
     // if toBase specifies a protocol path, ensure this is the same protocol as fromBase, if not
     // use absolute path at fromBase
     var toBaseProtocol = toBase.match(protocolRegEx);
@@ -111,11 +126,8 @@ define(function() {
     
     return out.substr(0, out.length - 1);
   };
-  
-  var normalizeCSS = function(source, fromBase, toBase) {
 
-    fromBase = removeDoubleSlashes(fromBase);
-    toBase = removeDoubleSlashes(toBase);
+  var normalizeCSS = function(source, fromBase, toBase) {
 
     var urlRegEx = /@import\s*("([^"]*)"|'([^']*)')|url\s*\((?!#)\s*(\s*"([^"]*)"|'([^']*)'|[^\)]*\s*)\s*\)/ig;
     var result, url, source;
