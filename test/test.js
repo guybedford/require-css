@@ -52,11 +52,17 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     normalize.convertURIBase('url(../test)', '/one/two/../three', '/one/four'),
     'url(../test)'
   );
+
   console.log('\nTesting Stylesheet Regular Expressions');
   assert(
     '@import statements',
     normalize('@import "test.css"', '/first/', '/second/'),
     '@import "../first/test.css"'
+  );
+  assert(
+    '@import statements with url()',
+    normalize('@import url("test.css")', '/first/', '/second/'),
+    '@import url("../first/test.css")'
   );
   assert(
     'url includes',
@@ -74,7 +80,7 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     '//font.server.com/static/fonts/opensans.woff'
   );
   assert(
-    'absolute url convert base',
+    'absolute url convert base (http)',
     normalize.convertURIBase("http://font.server.com/static/fonts/opensans.woff", '/first/one/', '/second/one/'),
     'http://font.server.com/static/fonts/opensans.woff'
   );
@@ -82,6 +88,11 @@ requirejs(['../css', '../normalize'], function(css, normalize) {
     'multiple url includes on the same line',
     normalize('src: url("../fonts/font.eot") format("embedded-opentype"), url("../fonts/font.woff") format("woff");', '/base/', '/'),
     'src: url("fonts/font.eot") format("embedded-opentype"), url("fonts/font.woff") format("woff");'
+  );
+  assert(
+    'multiple url includes on the same line (mixed)',
+    normalize('src: url("../fonts/font.eot") format("embedded-opentype"), url("http://server.com/opensans.woff") format("woff");', '/base/', '/'),
+    'src: url("fonts/font.eot") format("embedded-opentype"), url("http://server.com/opensans.woff") format("woff");'
   );
   assert(
     'absolute URI test',

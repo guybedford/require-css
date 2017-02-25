@@ -2,7 +2,7 @@
   appDir: 'www',
   dir: 'www-built',
   baseUrl: '.',
-  fileExclusionRegExp: /(^example)|(.git)|(node_modules)|(bower_components)$/,
+  fileExclusionRegExp: /(^example)|(.git)|(node_modules)|(bower_components)|(test)$/,
   //separateCSS: true,
   //buildCSS: false,
   optimizeCss: "none",

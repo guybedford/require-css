@@ -6,5 +6,10 @@
   },
   "scripts": {
     "test": "node test/test.js"
-  }
+  },
+  "devDependencies": {
+    "requirejs": "2.1.10"
+  },
+  "repository": "https://github.com/guybedford/require-css",
+  "license": "MIT"
 }
