@@ -129,9 +129,11 @@ define(function() {
     var link = document.createElement('link');
     link.type = 'text/css';
     link.rel = 'stylesheet';
+    link.media = 'only x';
     if (useOnload)
       link.onload = function() {
         link.onload = function() {};
+        link.media = 'all';
         // for style dimensions queries, a short delay can still be necessary
         setTimeout(callback, 7);
       }
@@ -141,6 +143,7 @@ define(function() {
           var sheet = document.styleSheets[i];
           if (sheet.href == link.href) {
             clearInterval(loadInterval);
+            link.media = 'all';
             return callback();
           }
         }
