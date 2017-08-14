@@ -127,7 +127,7 @@ define(['require', './normalize'], function(req, normalize) {
     config = config || _config;
 
     if (!siteRoot) {
-      siteRoot = path.resolve(config.dir || path.dirname(config.out), config.siteRoot || '.') + '/';
+      siteRoot = path.resolve(config.dir || path.dirname(typeof config.out === 'string' ? config.out : config.out.toString()), config.siteRoot || '.') + '/';
       if (isWindows)
         siteRoot = siteRoot.replace(/\\/g, '/');
     }
