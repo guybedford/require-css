@@ -151,16 +151,13 @@ define(function() {
 
 //>>excludeEnd('excludeRequireCss')
   cssAPI.normalize = function(name, normalize) {
-    if (name.substr(name.length - 4, 4) == '.css')
-      name = name.substr(0, name.length - 4);
-
     return normalize(name);
   }
 
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   cssAPI.load = function(cssId, req, load, config) {
 
-    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
+    (useImportLoad ? importLoad : linkLoad)((useImportLoad ? req.toUrl(cssId) : cssId), load);
 
   }
 
