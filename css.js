@@ -157,12 +157,19 @@ define(function() {
     return normalize(name);
   }
 
+  // cache for loaded modules
+  cssAPI.urlFetched = {};
 //>>excludeStart('excludeRequireCss', pragmas.excludeRequireCss)
   cssAPI.load = function(cssId, req, load, config) {
-
-    (useImportLoad ? importLoad : linkLoad)(req.toUrl(cssId + '.css'), load);
-
-  }
+    var url = req.toUrl(cssId + '.css');
+    if (!cssAPI.urlFetched[url]) {
+      cssAPI.urlFetched[url] = true;
+      (useImportLoad ? importLoad : linkLoad)(url, load);
+    }
+    else {
+      load();
+    }
+  };
 
 //>>excludeEnd('excludeRequireCss')
   return cssAPI;
