@@ -216,6 +216,21 @@ To disable any CSS build entirely, use the configuration option `buildCSS`:
 
 CSS requires will then be left in the source "as is". This shouldn't be used with `stubModules`.
 
+### Disabling CSS Optimization
+
+To disable CSS optimization of the built CSS, use the `optimizeRequireCSS` option:
+
+```javascript
+{
+  optimizeRequireCSS: false,
+  modules: [
+  {
+    name: 'mymodule'
+  }
+  ]
+}
+```
+
 CSS Compression
 ---------------
 

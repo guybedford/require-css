@@ -4,7 +4,7 @@ define(['require', './normalize'], function(req, normalize) {
   var isWindows = !!process.platform.match(/^win/);
 
   function compress(css) {
-    if (config.optimizeCss == 'none') {
+    if (config.optimizeRequireCSS===false) {
       return css;
     }
     
