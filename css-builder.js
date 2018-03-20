@@ -95,7 +95,6 @@ define(['require', './normalize'], function(req, normalize) {
 
   // NB add @media query support for media imports
   var importRegEx = /@import\s*(url)?\s*(('([^']*)'|"([^"]*)")|\(('([^']*)'|"([^"]*)"|([^\)]*))\))\s*;?/g;
-  var absUrlRegEx = /^([^\:\/]+:\/)?\//;
 
   // Write Css module definition
   var writeCSSDefinition = "define('@writecss', function() {return function writeCss(c) {var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));};});";
@@ -126,7 +125,7 @@ define(['require', './normalize'], function(req, normalize) {
     var fileUrl = req.toUrl(name + '.css');
 
     //external URLS don't get added (just like JS requires)
-    if (fileUrl.match(absUrlRegEx))
+    if (fileUrl.indexOf('://') !== -1)
       return load();
 
     if (isWindows)
